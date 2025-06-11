@@ -19,12 +19,6 @@
       tty-clock
     ];
 
-    home.file.".xinitrc".text = ''
-      #!/bin/sh
-      [[ -f ~/.Xresources ]] && xrdb -merge ~/.Xresources
-      exec i3
-    '';
-
     home.file.".config/kitty" = {
       source = ./dotfiles/kitty;
       recursive = true;
