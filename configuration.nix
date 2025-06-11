@@ -14,11 +14,10 @@
   # for uefi
   # boot.loader.systemd-boot.enable = true;
   # boot.loader.efi.canTouchEfiVariables = true;
-  
+
   # for vbox etc bios
   boot.loader.grub = {
     enable = true;
-    version = 2;
     device = "/dev/sda";
   };
 
