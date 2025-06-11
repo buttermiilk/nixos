@@ -2,7 +2,7 @@
 { config, pkgs, ... }:
 
 {
-  home-manager.users.sh1m3ji = {
+  home-manager.users.rin = {
     home.stateVersion = "23.11";
 
     programs.zsh = {
