@@ -66,6 +66,7 @@
     xorg.xinit
     kitty
     fastfetch
+    feh
     i3status-rust
     picom
     rofi
