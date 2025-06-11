@@ -3,13 +3,13 @@
 
 {
   home-manager.users.rin = {
-    home.stateVersion = "23.11";
+    home.stateVersion = "24.05";
 
     programs.zsh = {
       enable = true;
       ohMyZsh = {
         enable = true;
-        theme = "robbyrussell";
+        theme = "candy";
         plugins = [ "git" "z" ];
       };
     };
