@@ -72,7 +72,7 @@
     flameshot
     redshift
     brightnessctl
-    ttf-jetbrains-mono-nerd
+    nerd-fonts.jetbrains-mono
     git
     firefox
   ];
