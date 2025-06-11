@@ -3,7 +3,7 @@
 
 {
   home-manager.users.rin = {
-    home.stateVersion = "24.05";
+    home.stateVersion = "25.05";
 
     programs.zsh = {
       enable = true;
