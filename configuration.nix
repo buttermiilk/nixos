@@ -62,6 +62,10 @@
     pulse.enable = true;
   };
 
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+  ];
+
   environment.systemPackages = with pkgs; [
     xorg.xinit
     kitty
@@ -80,7 +84,6 @@
     flameshot
     redshift
     brightnessctl
-    nerd-fonts.jetbrains-mono
     git
     firefox
   ];
