@@ -35,11 +35,15 @@
   };
 
   programs.zsh.enable = true;
-  services.redshift.enable = true;
-  services.redshift.latitude = 10.75;
-  services.redshift.longitude = 106.67;
+  services.redshift = {
+    enable = true;
+    location = {
+      latitude = 10.75;
+      longitude = 106.67;
+    };
+  };
 
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   services.pipewire = {
     enable = true;
     audio.enable = true;
@@ -55,7 +59,7 @@
     rofi
     pavucontrol
     dunst
-    thunar
+    xfce.thunar
     gtk3
     zsh
     btop
