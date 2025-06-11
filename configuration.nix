@@ -21,7 +21,7 @@
     device = "/dev/sda";
   };
 
-  networking.hostName = "shimeji-nix";
+  networking.hostName = "NAVI";
   time.timeZone = "Asia/Ho_Chi_Minh";
   i18n.defaultLocale = "en_US.UTF-8";
   console.keyMap = "us";

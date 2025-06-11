@@ -43,7 +43,7 @@
       source = ./dotfiles/rofi;
       recursive = true;
     };
-    home.file."Pictures/wallpapers" = {
+    home.file.".config/wallpapers" = {
       source = ./dotfiles/wallpapers;
       recursive = true;
     };
