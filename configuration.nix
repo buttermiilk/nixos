@@ -33,13 +33,18 @@
       layout = "us";
     };
   };
+  
+  location = {
+    latitude = 10.75;
+    longitude = 106.67;
+  };
 
   programs.zsh.enable = true;
   services.redshift = {
     enable = true;
-    location = {
-      latitude = 10.75;
-      longitude = 106.67;
+    temperature = {
+      day = 5700;
+      night = 3500;
     };
   };
 
