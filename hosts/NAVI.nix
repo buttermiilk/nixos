@@ -1,12 +1,6 @@
 { config, pkgs, ... }:
 
 {
-  imports = [
-    ./hardware-configuration.nix
-    ./home.nix  # Home Manager stuff
-    <home-manager/nixos>
-  ];
-
   system.stateVersion = "25.05";
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -36,17 +30,16 @@
     enable = true;
     windowManager.i3.enable = true;
     displayManager.startx.enable = true;
-    xkb = {
-      layout = "us";
-    };
+    xkb.layout = "us";
   };
-  
+
   location = {
     latitude = 10.75;
     longitude = 106.67;
   };
 
   programs.zsh.enable = true;
+
   services.redshift = {
     enable = true;
     temperature = {
