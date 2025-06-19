@@ -51,21 +51,39 @@
       cpSh = import ./environments/cpp.nix        { inherit pkgs; };
       dkSh = import ./environments/docker.nix     { inherit pkgs; };
     in {
+      # there are a few things you can put inside this outputs block
+      # for example you can configure the system in here,
+      # the shells for stuff, home manager, etc.
+
+      # this is the system configuration
+      # inside nixosConfigurations is the host name followed by settings
       nixosConfiguration = {
+        # we have a system under the name NAVI
         NAVI = nixpkgs.lib.nixosSystem {
+          # with this system architecture
           inherit system;
+          # with these modules
           modules = [
+            # this file is the various configuration of our host
+            # we import it to keep this file clean
             ./hosts/NAVI.nix
+            # home manager
             home-manager.nixosModules.home-manager
             {
+              # allow the use of global packages
               home-manager.useGlobalPkgs = true;
+              # allow the use of the user's own declared packages
               home-manager.useUserPackages = true;
+              # we declare this host's users' homes here
               home-manager.users.rin = import ./home/rin.nix;
             }
           ];
         }
       };
-      
+      # this is the shells configuration
+      # we can have shells for various environments we want to work in
+      # for example python for python works, cpp for cpp works, etc
+      # this is easily extendable inside the 'environments' folder
       devShells.${system} = {
         typescript = tsSh;
         python = pySh;
