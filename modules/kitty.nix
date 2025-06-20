@@ -9,7 +9,6 @@
       name = "JetBrainsMono Nerd Font";
       size = 13;
     };
-    shell = pkgs.zsh;
 
     settings = {
       foreground = "#fafafa";
