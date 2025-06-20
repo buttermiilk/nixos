@@ -68,8 +68,4 @@
     source = ../dotfiles/main/wallpapers;
     recursive = true;
   };
-  home.file.".config/waybar" = {
-    source = ../dotfiles/main/waybar;
-    recursive = true;
-  };
 }
