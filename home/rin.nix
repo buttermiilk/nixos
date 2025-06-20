@@ -1,6 +1,8 @@
 { config, pkgs, ... }:
 
 {
+  # import our modularized dots
+  imports = builtins.attrValues (import ./modules);
   # state the version of the home manager
   home.stateVersion = "25.05";
 
@@ -34,40 +36,40 @@
   # packages for this user only
   # it is recommended to put dotfiles packages in here
   home.packages = with pkgs; [
-    cbonsai
-    tty-clock
-    zoxide
+    # dotfiles stuff
+    adwaita-icon-theme
+    bat cava dunst
+    hyprland hyprlock hyprpaper
+    kitty ncmpcpp neovim
+    nwg-dock-hyprland
+    nwg-drawer rofi
+    playerctl waybar fcitx5
+    # misc toolings
+    cbonsai hyprsunset hyprshot
+    tty-clock wl-clipboard zoxide
   ];
 
   # symlink dotfiles in the respective home directories
   # when you need to change something, depends on where you
   # installed your base system, get in there and work with it
-  home.file.".config/kitty" = {
-    source = ../dotfiles/kitty;
-    recursive = true;
-  };
-  home.file.".config/fastfetch" = {
-    source = ../dotfiles/fastfetch;
-    recursive = true;
-  };
-  home.file.".config/i3" = {
-    source = ../dotfiles/i3;
-    recursive = true;
-  };
-  home.file.".config/i3status-rust" = {
-    source = ../dotfiles/i3status-rust;
-    recursive = true;
-  };
-  home.file.".config/picom" = {
-    source = ../dotfiles/picom;
+  home.file.".config/nvim" = {
+    source = ../dotfiles/main/nvim;
     recursive = true;
   };
   home.file.".config/rofi" = {
-    source = ../dotfiles/rofi;
+    source = ../dotfiles/main/rofi;
+    recursive = true;
+  };
+  home.file.".config/scripts" = {
+    source = ../dotfiles/main/scripts;
     recursive = true;
   };
   home.file.".config/wallpapers" = {
-    source = ../dotfiles/wallpapers;
+    source = ../dotfiles/main/wallpapers;
+    recursive = true;
+  };
+  home.file.".config/waybar" = {
+    source = ../dotfiles/main/waybar;
     recursive = true;
   };
 }

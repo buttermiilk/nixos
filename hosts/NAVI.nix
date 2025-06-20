@@ -28,6 +28,8 @@
   i18n.defaultLocale = "en_US.UTF-8";
   # the keymap we want to use
   console.keyMap = "us";
+  # network manager things
+  services.networking.networkmanager.enable = true;
 
   # declare our users of this host
   # we have to make a user here before making a home-manager entry
@@ -39,15 +41,30 @@
   };
 
   # enable the x11 display server
-  # if you use wayland, do wayland, etc, check the docs
-  services.xserver = {
+  # services.xserver = {
+  #   enable = true;
+  #   # use i3
+  #   windowManager.i3.enable = true;
+  #   # use startx to point i3 to the right configuration files
+  #   displayManager.startx.enable = true;
+  #   # set xkb layout to what we set in the keymap
+  #   xkb.layout = "us";
+  # };
+
+  # use hyprland and set hyprland stuff
+  programs.hyprland.enable = true;
+  environment.sessionVariables = {
+    WLR_NO_HARDWARE_CURSORS = "1";
+    NIXOS_OZONE_WL = "1";
+    XCURSOR_SIZE = "24";
+    XDG_CURRENT_DESKTOP = "Hyprland";
+    XDG_SESSION_TYPE = "wayland";
+    XDG_SESSION_DESKTOP = "Hyprland";
+  };
+  services.dbus.enable = true;
+  xdg.portal = {
     enable = true;
-    # use i3
-    windowManager.i3.enable = true;
-    # use startx to point i3 to the right configuration files
-    displayManager.startx.enable = true;
-    # set xkb layout to what we set in the keymap
-    xkb.layout = "us";
+    extraPortals = [ pkgs.xdg-desktop-portal-gtk pkgs.xdg-desktop-portal-hyprland ];
   };
 
   # approximate the lat/long for several commands
@@ -82,29 +99,23 @@
   # choose the system fonts
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    inter
+    noto-fonts
+    noto-fonts-emoji
   ];
 
   # the packages this host will have globally
   # preferably have the dotfiles' packages in home-manager
   environment.systemPackages = with pkgs; [
-    xorg.xinit
-    kitty
     fastfetch
-    feh
-    i3status-rust
-    picom
-    rofi
     pavucontrol
-    dunst
     xfce.thunar
     gtk3
     zsh
     btop
     vim
-    flameshot
-    redshift
     brightnessctl
     git
-    firefox
+    firefox # a fallback browser for all users
   ];
 }

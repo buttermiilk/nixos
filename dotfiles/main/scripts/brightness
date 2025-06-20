@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+# Define brightness icon to use
+icon="󰛨"
+
+# Get brightness percentage
+get_backlight() {
+  LIGHT=$(printf "%.0f\n" "$(brightnessctl i)")
+  echo "${LIGHT}%"
+}
+
+# Send notification
+notify_user() {
+  notify-send -h string:x-canonical-private-synchronous:sys-notify -u low "$icon Brightness: $(brightnessctl g)"
+}
+
+# Increase brightness
+inc_backlight() {
+  brightnessctl set 10%+ && notify_user
+}
+
+# Decrease brightness
+dec_backlight() {
+  brightnessctl set 10%- && notify_user
+}
+
+# Execute based on argument
+case "$1" in
+  --get) brightnessctl g ;;
+  --inc) inc_backlight ;;
+  --dec) dec_backlight ;;
+  *) get_backlight ;;
+esac
+

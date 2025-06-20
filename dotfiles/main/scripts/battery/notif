@@ -1,0 +1,36 @@
+#!/bin/sh
+WARNING_LEVEL=21
+emp_flag=0
+full_flag=0
+
+ICON_FULL="battery-full-symbolic"
+ICON_LOW="battery-caution-symbolic"
+
+# Use inotify to watch battery percentage changes
+inotifywait -e ACCESS -m /sys/class/power_supply/BAT1/capacity | while read; do
+  STATUS=$(cat /sys/class/power_supply/BAT1/status)
+  LEVEL=$(cat /sys/class/power_supply/BAT1/capacity)
+
+  # Reset if state changes
+  if [ "$STATUS" = "Discharging" ] && [ "$full_flag" -eq 1 ]; then
+    full_flag=0
+  elif [ "$STATUS" = "Charging" ] && [ "$emp_flag" -eq 1 ]; then
+    emp_flag=0
+  fi
+
+  # Notify when full
+  if [ "$LEVEL" -gt 95 ] && [ "$STATUS" = "Charging" ] && [ "$full_flag" -ne 1 ]; then
+    notify-send "Battery charged" "Battery is fully charged." \
+      -i "$ICON_FULL" -r 9991
+    full_flag=1
+
+  # Notify when low
+  elif [ "$LEVEL" -le "$WARNING_LEVEL" ] && [ "$STATUS" = "Discharging" ] && [ "$emp_flag" -ne 1 ]; then
+    notify-send "Low Battery" "${LEVEL}% remaining." \
+      -u critical -i "$ICON_LOW" -r 9991
+    # Uncomment this if you want it to only notify once
+    # emp_flag=1
+  fi
+
+  sleep 0.5
+done

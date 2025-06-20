@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Usage: chargingnotify 0|1
+# 1 = charging, 0 = discharging
+
+if [ $# -ne 1 ]; then
+  printf 'Usage: %s 0|1 (charging = 1, discharging = 0)\n' "$0"
+  exit 1
+fi
+
+BATTERY_CHARGING=$1
+BATTERY_LEVEL=$(acpi -b | grep -Po '[0-9]+(?=%)')
+
+ICON_CHARGING="battery-good-charging-symbolic"
+ICON_DISCHARGING="battery-good-symbolic"
+
+if [ "$BATTERY_CHARGING" -eq 1 ]; then
+  notify-send "Charging" "${BATTERY_LEVEL}% of battery charged." \
+    -u low -i "$ICON_CHARGING" -t 5000 -r 9991
+else
+  notify-send "Discharging" "${BATTERY_LEVEL}% of battery remaining." \
+    -u low -i "$ICON_DISCHARGING" -t 5000 -r 9991
+fi

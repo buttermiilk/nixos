@@ -1,0 +1,44 @@
+#!/bin/sh
+
+function entry() {
+  n_left=$(wc -c <<< "$1")
+  if [[ -z $2 ]]; then
+    printf "%s" "$1"
+    return
+  fi
+  pad=$(( $3 - $n_left ))
+  printf "%s%${pad}s" "$1" "$2"
+}
+
+updates=0
+
+if [[ -f /tmp/updatecount ]]; then 
+  updates="$(cat /tmp/updatecount)"
+fi
+
+choice1=" About this lappy"
+if [[ "$updates" == "0" ]]; then
+  choice2="$(entry " System/App updates")"
+else
+  numlen="$(wc -c <<< "$updates")"
+  case "$numlen" in
+    2) width=62 ;;
+    3) width=60 ;;
+    4) width=60 ;;
+  esac
+  choice2="$(entry " System/App updates..." "$updates updates" $width)"
+fi
+
+choice3="$(entry " Restart")"
+choice4="$(entry " Shut Down")"
+choice5="$(entry " Log Out")"
+
+chosen=$(printf "$choice1\n$choice2\n$choice3\n$choice4\n$choice5" | rofi -dmenu -i -no-show-icons -l 7 -width 30 -p " Lappy/Power Menu")
+
+case "$chosen" in
+  "$choice1") kitty --title fastfetch zsh -i -c 'fastfetch && sleep infinity' ;;
+  "$choice2") kitty bash -i -c 'sudo pacman -Syu && yay -Syu' ;;
+  "$choice3") reboot ;;
+  "$choice4") poweroff ;;
+  "$choice5") hyprlock ;;
+esac
