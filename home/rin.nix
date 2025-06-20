@@ -2,7 +2,7 @@
 
 {
   # import our modularized dots
-  imports = builtins.attrValues (import ./modules);
+  imports = builtins.attrValues (import ../modules);
   # state the version of the home manager
   home.stateVersion = "25.05";
 
