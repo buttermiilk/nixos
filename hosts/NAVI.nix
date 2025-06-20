@@ -22,14 +22,14 @@
   # the hostname of the system
   # this should be the filename
   networking.hostName = "NAVI";
+  # network manager things
+  networking.networkmanager.enable = true;
   # the timezone of our system
   time.timeZone = "Asia/Ho_Chi_Minh";
   # the locale we want to use
   i18n.defaultLocale = "en_US.UTF-8";
   # the keymap we want to use
   console.keyMap = "us";
-  # network manager things
-  services.networking.networkmanager.enable = true;
 
   # declare our users of this host
   # we have to make a user here before making a home-manager entry
