@@ -57,7 +57,7 @@
 
       # this is the system configuration
       # inside nixosConfigurations is the host name followed by settings
-      nixosConfiguration = {
+      nixosConfigurations = {
         # we have a system under the name NAVI
         NAVI = nixpkgs.lib.nixosSystem {
           # with this system architecture
@@ -89,6 +89,6 @@
         python = pySh;
         cpp = cpSh;
         docker = dkSh;
-      }
+      };
     }
 }
