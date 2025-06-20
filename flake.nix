@@ -68,7 +68,7 @@
             # we import it to keep this file clean
             ./hosts/NAVI.nix
             # assume this is generated in the same folder
-            ./hardware-configuration.nix
+            /etc/nixos/hardware-configuration.nix
             # home manager
             home-manager.nixosModules.home-manager
             {
