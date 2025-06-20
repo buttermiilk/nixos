@@ -78,7 +78,7 @@
               home-manager.users.rin = import ./home/rin.nix;
             }
           ];
-        }
+        };
       };
       # this is the shells configuration
       # we can have shells for various environments we want to work in
@@ -91,4 +91,4 @@
         docker = dkSh;
       };
     }
-}
+};
