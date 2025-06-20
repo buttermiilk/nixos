@@ -19,7 +19,7 @@
       plugins = [ "git" "z" ];
     };
     # initialize zoxide which is just a better cd command
-    initExtra = ''
+    initContent = ''
       eval "$(zoxide init zsh)"
     '';
   };
