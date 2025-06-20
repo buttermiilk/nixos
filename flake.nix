@@ -90,5 +90,5 @@
         cpp = cpSh;
         docker = dkSh;
       };
-    }
-};
+    };
+}
