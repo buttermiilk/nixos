@@ -13,7 +13,7 @@
         "playerctld"
         "waybar"
         "wl-paste --watch cliphist store"
-        # "hyprlock --immediate"
+        "hyprlock --immediate"
         "~/.config/scripts/battery/notif"
         "export GTK_IM_MODULE=fcitx5"
         "export QT_IM_MODULE=fcitx5"

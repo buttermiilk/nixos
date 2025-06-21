@@ -112,6 +112,7 @@
     xfce.thunar
     gtk3
     zsh
+    killall
     btop
     vim
     brightnessctl
