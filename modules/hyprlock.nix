@@ -32,7 +32,6 @@ let
       check_color = rgba(204, 136, 34, 0)
       fail_color = rgba(204, 34, 34, 0.3) # if authentication fail change to this color
       fail_text = $FAIL <b>($ATTEMPTS)</b> # can be set to empty
-      fail_transition = 300 # transition time in ms between normal outer_color and fail_color
       capslock_color = -1
       numlock_color = -1
       bothlock_color = -1 # when both locks are active. -1 means don't change outer color (same for above)
