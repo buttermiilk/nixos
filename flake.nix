@@ -67,10 +67,8 @@
             # this file is the various configuration of our host
             # we import it to keep this file clean
             ./hosts/NAVI.nix
-            # to keep this flakes pure during derivation,
-            # you need to copy your hardware-configuration.nix
-            # into this, and it must have the right name!
-            ./hosts/NAVIconfig.nix
+            # huuuh okay
+            /etc/nixos/hardware-configuration.nix
             # home manager
             home-manager.nixosModules.home-manager
             {
