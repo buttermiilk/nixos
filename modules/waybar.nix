@@ -143,7 +143,7 @@
     }
 
     window#waybar {
-      background-color: rgba(111, 111, 111, 0.4);
+      background-color: rgba(242, 243, 244, 0.45);
     }
 
     #custom-app-menu,
