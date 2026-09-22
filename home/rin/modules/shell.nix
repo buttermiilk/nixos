@@ -21,7 +21,7 @@ in
   services.gpg-agent = {
     enable = true;
     enableZshIntegration = true;
-    pinentry.package = pkgs.pinentry-curses;
+    pinentry.package = pkgs.pinentry-qt;
   };
 
   # Oh My Zsh comes from nixpkgs; Nix updates it with the rest of the system.
