@@ -1,0 +1,19 @@
+# the old Arch dots repo, kept locally for reference only
+old-dots/
+
+# Local assistant state and instructions.
+.agents/
+.claude/
+.codex/
+
+# Local design and implementation notes
+docs/*
+
+# Nix and direnv build state.
+.direnv/
+result
+result-*
+
+# Editor recovery files are local state and may contain sensitive text.
+*.kate-swp
+*.swp

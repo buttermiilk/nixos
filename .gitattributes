@@ -1,0 +1,4 @@
+# authored on Windows, deployed on Linux — keep everything LF
+* text=auto eol=lf
+*.jpg binary
+*.png binary
