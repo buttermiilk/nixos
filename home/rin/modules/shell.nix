@@ -111,7 +111,12 @@ in
       user = {
         name = "miilk";
         email = "53138512+buttermiilk@users.noreply.github.com";
+        signingKey = "6EEA8F49B00E0EEA3A3164DEA9B7F275D0F64688";
       };
+
+      commit.gpgSign = true;
+      tag.gpgSign = true;
+      gpg.format = "openpgp";
 
       init.defaultBranch = "main";
 

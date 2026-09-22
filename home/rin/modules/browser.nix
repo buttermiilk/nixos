@@ -130,8 +130,10 @@ in
     enable = true;
     defaultApplications = {
       "text/html" = [ "zen-beta.desktop" ];
+      "message/rfc822" = [ "thunderbird.desktop" ];
       "x-scheme-handler/http" = [ "zen-beta.desktop" ];
       "x-scheme-handler/https" = [ "zen-beta.desktop" ];
+      "x-scheme-handler/mailto" = [ "thunderbird.desktop" ];
     };
   };
 }

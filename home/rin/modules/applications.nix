@@ -8,6 +8,14 @@ let
   };
 in
 {
+  programs.thunderbird = {
+    enable = true;
+    profiles.default = {
+      isDefault = true;
+      withExternalGnupg = true;
+    };
+  };
+
   home.packages = with pkgs; [
     # Terminal tools
     fastfetch
