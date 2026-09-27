@@ -25,6 +25,8 @@
     "/home/rin/.android/adbkey"
     "/home/rin/.android/adbkey.pub"
     "/home/rin/.config/obs-studio/basic"
+    "/home/rin/.claude.json"
+    "/home/rin/.claude/.credentials.json"
     "/home/rin/.codex/auth.json"
     "/home/rin/.codex/sessions"
   ];

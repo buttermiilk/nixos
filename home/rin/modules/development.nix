@@ -24,6 +24,7 @@ in
     pnpm
     flyctl
     gh
+    inputs.claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
 
     # pdf tools
     poppler-utils
@@ -48,16 +49,17 @@ in
       model = "gpt-5.6-sol";
       model_reasoning_effort = "high";
 
-      disable_response_storage = true;
-      network_access = "enabled";
-
       approvals_reviewer = "auto_review";
 
       projects = {
         "/home/rin/nixConfig".trust_level = "trusted";
+        "/home/rin/Documents/Dev/bot".trust_level = "trusted";
         "/home/rin/Documents/Dev/blender".trust_level = "trusted";
+        "/home/rin/Documents/Dev/deliveratool".trust_level = "trusted";
         "/home/rin/Documents/Dev/lld-front".trust_level = "trusted";
         "/home/rin/Documents/Dev/milk".trust_level = "trusted";
+        "/home/rin/Documents/Dev/outline-lld".trust_level = "trusted";
+        "/home/rin/Documents/Dev/outline-lld-db".trust_level = "trusted";
         "/home/rin/Documents/Dev/vot-web".trust_level = "trusted";
         "/home/rin/Documents/Dev/etoh-datapack".trust_level = "trusted";
         "/home/rin/.var/app/org.vinegarhq.Sober/config/sober".trust_level = "trusted";
@@ -65,6 +67,7 @@ in
         "/home/rin/Documents/Dev/osu-skill".trust_level = "trusted";
         "/home/rin/Documents/Dev/randomizer".trust_level = "trusted";
         "/home/rin/Documents/Rev/someRandomThing.rep".trust_level = "trusted";
+        "/home/rin/Documents/Dev/stopmotion".trust_level = "trusted";
         "/home/rin/Documents/Dev/quals".trust_level = "trusted";
         "/home/rin/Documents/tosu-patched/static/vot6-overlay".trust_level = "trusted";
         "/home/rin/.local/share/osuconfig/tosu/static/vot6-overlay".trust_level = "trusted";

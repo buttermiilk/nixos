@@ -45,6 +45,7 @@ pkgs.runCommand "backup-manifest-check"
       "$fixture/home/rin/.gemini/antigravity-cli" \
       "$fixture/home/rin/.android" \
       "$fixture/home/rin/.config/obs-studio/basic/scenes" \
+      "$fixture/home/rin/.claude" \
       "$fixture/home/rin/.codex/sessions/2026/08/26"
 
     touch \
@@ -73,6 +74,8 @@ pkgs.runCommand "backup-manifest-check"
       "$fixture/home/rin/.android/adbkey" \
       "$fixture/home/rin/.android/adbkey.pub" \
       "$fixture/home/rin/.config/obs-studio/basic/scenes/Personal.json" \
+      "$fixture/home/rin/.claude.json" \
+      "$fixture/home/rin/.claude/.credentials.json" \
       "$fixture/home/rin/.codex/auth.json" \
       "$fixture/home/rin/.codex/sessions/2026/08/26/session.jsonl"
 
@@ -130,6 +133,8 @@ pkgs.runCommand "backup-manifest-check"
     assert_present /home/rin/.android/adbkey
     assert_present /home/rin/.android/adbkey.pub
     assert_present /home/rin/.config/obs-studio/basic/scenes/Personal.json
+    assert_present /home/rin/.claude.json
+    assert_present /home/rin/.claude/.credentials.json
     assert_present /home/rin/.codex/auth.json
     assert_present /home/rin/.codex/sessions/2026/08/26/session.jsonl
 

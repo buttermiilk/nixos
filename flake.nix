@@ -54,6 +54,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    claude-code-nix = {
+      url = "git+https://github.com/sadjow/claude-code-nix.git?ref=main";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.systems.follows = "codex-nix/flake-utils/systems";
+    };
+
     # nixcord
     # basically just discord with vencord that's declarative
     nixcord = {
@@ -97,6 +103,7 @@
       pkgs = import nixpkgs {
         inherit system;
         overlays = [ overlay ];
+        config.allowUnfree = true;
       };
 
       authorizeGoogleDrive = pkgs.callPackage ./pkgs/authorize-google-drive.nix { };
