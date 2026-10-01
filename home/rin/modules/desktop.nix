@@ -23,6 +23,20 @@ let
       builtins.readFile ../dotfiles/scripts/inhibit-clicker.sh
     );
   };
+
+  ecoMode = pkgs.writeShellApplication {
+    name = "eco-mode";
+    runtimeInputs = with pkgs; [
+      brightnessctl
+      coreutils
+      i3
+      libnotify
+      procps
+      materialPolybar # polybar-msg
+    ];
+    text = lib.removePrefix "#!/usr/bin/env bash
+" (builtins.readFile ../dotfiles/scripts/eco-mode.sh);
+  };
 in
 {
   home.packages = with pkgs; [
@@ -30,18 +44,17 @@ in
     picom
     feh
     autotiling
-    xborders
     rofi
     materialPolybar
     flameshot
     libnotify # notify-send, used by the i3 split-orientation binds
     brightnessctl
-    alsa-utils # amixer, used by the F8 microphone mute bind
-    pulseaudio # pactl CLI only; the actual server is PipeWire
+    pulseaudio # pactl CLI only (volume/mic binds); the actual server is PipeWire
     i3lock
     pavucontrol
     xclip
     inhibitClicker
+    ecoMode
     google-chrome
   ];
 
@@ -107,16 +120,5 @@ in
       # Zellij owns tabs and the status bar in this setup.
       tab_bar_style = "hidden";
     };
-  };
-
-  programs.obs-studio = {
-    enable = true;
-    plugins = with pkgs.obs-studio-plugins; [
-      obs-backgroundremoval
-      obs-pipewire-audio-capture
-      obs-plugin-countdown
-      obs-gstreamer
-      obs-vkcapture
-    ];
   };
 }

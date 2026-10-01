@@ -7,4 +7,9 @@ if [[ ! -x "$osu_wine" ]]; then
   exit 1
 fi
 
-exec steam-run "$osu_wine" "$@"
+# Wine routes every key press through XIM when XMODIFIERS points at fcitx5,
+# which delays or drops taps under load. osu! does not need the IME.
+unset XMODIFIERS
+
+# gamemoderun holds the performance CPU governor for the lifetime of the game.
+exec gamemoderun steam-run "$osu_wine" "$@"

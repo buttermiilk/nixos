@@ -9,6 +9,7 @@
     ./modules/desktop.nix
     ./modules/development.nix
     ./modules/nixcord.nix
+    ./modules/obs.nix
     ./modules/rclone.nix
     ./modules/shell.nix
   ];

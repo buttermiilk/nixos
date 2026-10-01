@@ -14,6 +14,7 @@
     antigravity = {
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "codex-nix/flake-utils";
     };
 
     # Blender Lab's official MCP server and Blender extension.
@@ -65,6 +66,9 @@
     nixcord = {
       url = "github:4evy/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
+      # Otherwise nixcord locks its own second copies of these.
+      inputs.nixpkgs-nixcord.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
     };
   };
 
@@ -94,6 +98,7 @@
         bongocat-osu = final.callPackage ./pkgs/bongocat-osu.nix { };
         taiko-editor = final.callPackage ./pkgs/taiko-editor.nix { };
         material-icon-font = final.callPackage ./pkgs/material-icon-font.nix { };
+        monitask = final.callPackage ./pkgs/monitask.nix { };
         tiny10-vm = final.callPackage ./pkgs/tiny10-vm.nix { };
         neuro-cursor = final.callPackage ./pkgs/neuro-cursor.nix {
           src = ./home/rin/dotfiles/neuro-cursor/theme;
@@ -161,6 +166,7 @@
           blender-with-mcp
           bongocat-osu
           material-icon-font
+          monitask
           neuro-cursor
           taiko-editor
           tiny10-vm

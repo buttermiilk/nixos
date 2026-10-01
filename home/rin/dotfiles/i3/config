@@ -1,6 +1,7 @@
 # i3 config file
 
-for_window [class="^.*"] border pixel 0
+# Native i3 borders use the client.* colors at the bottom of this file.
+for_window [class="^.*"] border pixel 3
 
 # set mod key (Mod1=<Alt>, Mod4=<Super>)
 set $mod Mod4
@@ -14,8 +15,8 @@ exec --no-startup-id fcitx5 -d
 exec --no-startup-id blueman-applet
 exec --no-startup-id polybar main
 exec_always --no-startup-id setxkbmap -option
-exec_always --no-startup-id autotiling
-exec_always --no-startup-id xborders --border-radius 0 --border-width 3 --border-red 111 --border-green 143 --border-blue 168
+# `exec`, not `exec_always`: every i3 reload would otherwise start another copy.
+exec --no-startup-id autotiling
 
 # Font for window titles. Polybar selects its own font in config.ini.
 font pango:Fantasque Sans Mono Bold 13
@@ -47,6 +48,9 @@ bindsym $mod+p exec --no-startup-id ~/.config/rofi/powermenu.sh
 
 # toggle the sleep-inhibiting click loop after the chord has been released
 bindsym --release $mod+Mod1+x exec --no-startup-id inhibit-clicker toggle
+
+# Aggressive battery saving (TLP power-saver, no picom, brightness cap)
+bindsym $mod+b exec --no-startup-id eco-mode toggle
 
 # change focus
 bindsym $mod+h focus left
@@ -94,7 +98,7 @@ bindsym F3 exec --no-startup-id brightnessctl set 10%-
 bindsym F4 exec --no-startup-id brightnessctl set +10%
 
 # Microphone mute/unmute
-bindsym F8 exec --no-startup-id amixer set Capture toggle
+bindsym F8 exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
 # Screenshot
 bindsym F12 exec flameshot gui

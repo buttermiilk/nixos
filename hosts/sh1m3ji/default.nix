@@ -79,9 +79,51 @@
   # interactive after first boot; its state has a dedicated Btrfs subvolume.
   services.cloudflare-warp.enable = true;
 
-  hardware.graphics = {
+  # nixos-hardware's common-cpu-intel already enables graphics and adds the
+  # VAAPI/compute runtimes. Iris Xe only needs iHD; the default (null) would also
+  # pull in the legacy i965 driver and Intel's CPU OpenCL runtime.
+  hardware.intelgpu.vaapiDriver = "intel-media-driver";
+
+  # `gamemoderun` (used by the osu-winello wrapper) switches the CPU to the
+  # performance governor/EPP while a game runs, so TLP's balanced profile
+  # cannot cause frequency-ramp stutter mid-map.
+  programs.gamemode.enable = true;
+
+  # nixos-hardware's laptop profile enables TLP. `eco-mode` switches it to
+  # the power-saver profile (`_SAV` values); AC and BAT values must be given
+  # too, or TLP copies the SAV value into them.
+  services.tlp.settings = {
+    CPU_BOOST_ON_AC = 1;
+    CPU_BOOST_ON_BAT = 1;
+    CPU_BOOST_ON_SAV = 0;
+    CPU_HWP_DYN_BOOST_ON_AC = 1;
+    CPU_HWP_DYN_BOOST_ON_BAT = 0;
+    CPU_HWP_DYN_BOOST_ON_SAV = 0;
+    PCIE_ASPM_ON_AC = "default";
+    PCIE_ASPM_ON_BAT = "powersupersave";
+  };
+  security.sudo.extraRules = [
+    {
+      users = [ "rin" ];
+      commands =
+        map
+          (profile: {
+            command = "/run/current-system/sw/bin/tlp ${profile}";
+            options = [ "NOPASSWD" ];
+          })
+          [
+            "power-saver"
+            "balanced"
+            "performance"
+          ];
+    }
+  ];
+
+  # 12 GB is tight with Discord, Zen, and an IDE open. Compressed RAM swap is
+  # used before the disk swapfile, avoiding multi-second stalls on LUKS+Btrfs.
+  zramSwap = {
     enable = true;
-    extraPackages = [ pkgs.intel-media-driver ]; # VAAPI for Iris Xe
+    memoryPercent = 50;
   };
 
   services.fstrim.enable = true; # weekly SSD trim through the LUKS mapper
@@ -197,7 +239,7 @@
       fantasque-sans-mono
       noto-fonts-cjk-sans
       noto-fonts-color-emoji
-      pkgs.material-icon-font
+      material-icon-font
     ];
 
     fontconfig = {
@@ -243,6 +285,13 @@
     "nix-command"
     "flakes"
   ];
+  # configurationLimit only trims boot entries; this also frees the store.
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+  nix.optimise.automatic = true;
 
   system.stateVersion = "26.05"; # never change this after install
 }
