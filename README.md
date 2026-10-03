@@ -88,6 +88,18 @@ sudo reboot
 ```
 
 Pull the USB, unlock LUKS, log in as `rin`; i3 starts automatically on tty1.
+Confirm the signing and SSH identities before treating the reinstall as
+complete:
+
+```sh
+gpg --list-secret-keys 6EEA8F49B00E0EEA3A3164DEA9B7F275D0F64688
+ssh-keygen -lf ~/.ssh/id_ed25519.pub
+```
+
+`restore-sh1m3ji` restores `Documents` through Restic, then decrypts
+`Documents/Backups/sh1m3ji-migration-keys.tar.age` with the supplied age key
+and installs its `.gnupg` and `.ssh` trees. Older restore tooling only restored
+the encrypted container, leaving the live GnuPG keyring empty.
 Then continue with [First boot](#first-boot).
 
 ## Layout
@@ -361,7 +373,16 @@ git diff -- secrets/secrets.yaml
 
 The tool writes the token back through SOPS without printing any credential.
 If `backup/manifest.nix` has `enable = false`, set it to `true`, rebuild, and
-take a first snapshot:
+create or refresh the inner key archive. The helper streams SSH, GnuPG, selected SOPS secrets, and CLI credentials directly into an archive encrypted to both age recipients in `.sops.yaml`; it does not write a plaintext staging archive:
+
+```sh
+bash home/rin/dotfiles/scripts/create-migration-key-archive.sh
+age --decrypt --identity "$HOME/.config/sops/age/keys.txt" \
+  "$HOME/Documents/Backups/sh1m3ji-migration-keys.tar.age" \
+  | tar --list --file=-
+```
+
+The validation command prints filenames only. Refresh this archive when a key or included login changes. It sits below `Documents`, so the normal encrypted Restic job carries the ciphertext. Rebuild and take a first snapshot:
 
 ```sh
 sudo nixos-rebuild switch --flake .#sh1m3ji
@@ -415,17 +436,14 @@ chmod +x osu-winello.sh
 steam-run ./osu-winello.sh
 ```
 
-After the installer finishes, open
-`~/.local/share/applications/osu-wine.desktop` and replace its `Exec=` line with:
+Choose **Custom path** in the installer and point it at `/home/rin/Documents/osu` when restoring an existing installation. The flake provides a declarative **osu! stable** menu entry that runs `osu-winello`, so remove Winello's duplicate launcher after installation. Keep its two hidden handler entries for `.osz`, `.osk`, and `osu://` links:
 
-```ini
-Exec=osu-winello %U
+```sh
+rm -f ~/.local/share/applications/osu-wine.desktop
+update-desktop-database ~/.local/share/applications
 ```
 
-The game can also be started from a terminal with `osu-winello`. Winello may 
-regenerate its desktop entry after an install, repair, or update; if the menu 
-launcher stops working, reapply that one-line `Exec=` change. Its Wine prefix 
-live below `~/.local/share`, which is safe on the persistent `/home` subvolume.
+The game can also be started from a terminal with `osu-winello`. The osu! files and songs live under the backed-up `Documents` tree. Winello's reconstructible Wine runtime, prefix, handlers, and `osu-wine` launcher live below `~/.local/share` and `~/.local/bin`; rerun the installer after a full reinstall.
 
 The launcher also runs the game under `gamemoderun` (performance CPU governor)
 and without fcitx5's XIM, which otherwise delays or drops key presses in Wine.

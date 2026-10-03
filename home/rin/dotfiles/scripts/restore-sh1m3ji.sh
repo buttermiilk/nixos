@@ -160,8 +160,13 @@ else
     "$requested_snapshot" >"$snapshots_json"
 fi
 
-snapshot_id=$(jq -er 'if length == 1 then .[0].id else empty end' "$snapshots_json")
-snapshot_time=$(jq -r '.[0].time' "$snapshots_json")
+snapshot_id=$(jq -er 'sort_by(.time) | last | .id // empty' "$snapshots_json")
+snapshot_time=$(jq -r 'sort_by(.time) | last | .time // empty' "$snapshots_json")
+
+if [[ -z "$snapshot_id" ]]; then
+  echo "restore: no valid snapshot in json file" >&2
+  exit 1
+fi
 
 printf 'Snapshot: %s\n' "$snapshot_id"
 printf 'Created:  %s\n' "$snapshot_time"
@@ -185,3 +190,34 @@ fi
 
 "${restic_command[@]}" "${restore_args[@]}"
 echo "restore: snapshot $snapshot_id completed successfully"
+
+if ! $dry_run; then
+  key_archive="$target/home/rin/Documents/Backups/sh1m3ji-migration-keys.tar.age"
+
+  if [[ -f "$key_archive" ]]; then
+    if ! age --decrypt --identity "$age_key" "$key_archive" \
+      | tar --extract --file=- --directory="$target" \
+          home/rin/.gnupg home/rin/.ssh; then
+      echo "restore: encrypted SSH/GnuPG key archive could not be extracted" >&2
+      exit 1
+    fi
+
+    gpg_private_keys=("$target"/home/rin/.gnupg/private-keys-v1.d/*.key)
+    if [[ ! -e "${gpg_private_keys[0]}" || ! -s "$target/home/rin/.ssh/id_ed25519" ]]; then
+      echo "restore: encrypted key archive is missing GnuPG or SSH private keys" >&2
+      exit 1
+    fi
+
+    find "$target/home/rin/.gnupg" \
+      \( -type f \( -name '*.lock' -o -name '.#*' \) -o -type s \) \
+      -delete || exit 1
+    chown -R --reference="$target/home/rin" \
+      "$target/home/rin/.gnupg" "$target/home/rin/.ssh" || exit 1
+    chmod 0700 "$target/home/rin/.gnupg" "$target/home/rin/.ssh" || exit 1
+
+    echo "restore: SSH and GnuPG key stores recovered from encrypted key archive"
+  else
+    echo "restore: required encrypted SSH/GnuPG key archive is missing" >&2
+    exit 1
+  fi
+fi

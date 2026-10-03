@@ -15,6 +15,22 @@ let
     text = builtins.readFile ../dotfiles/scripts/osu-winello.sh;
   };
 
+  osuIcon = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/NelloKudo/osu-winello/2914ed7687e99d43dde7821c3fd04f3723725723/stuff/osu-wine.png";
+    hash = "sha256-kn3mKfwpeTRScvxbH7jKbo+7zGDIozFkNVW8BmbayvQ=";
+  };
+
+  osuDesktop = pkgs.makeDesktopItem {
+    name = "osu-stable";
+    desktopName = "osu! stable";
+    comment = "Rhythm is just a click away";
+    exec = "osu-winello %U";
+    icon = osuIcon;
+    terminal = false;
+    startupNotify = true;
+    categories = [ "Game" ];
+  };
+
   # PhotoGIMP: Photoshop-style shortcuts, tool layout, and docks for GIMP 3.
   photogimpConfig =
     pkgs.runCommand "photogimp-3.1-config"
@@ -74,6 +90,7 @@ in
     steam-run
     zenity
     osuWinello
+    osuDesktop
   ];
 
   # GIMP rewrites its config files, so they cannot be read-only store links.

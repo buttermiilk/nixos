@@ -1,6 +1,8 @@
 {
+  age,
   coreutils,
   defaultSecretsFile,
+  gnutar,
   jq,
   lib,
   manifest,
@@ -14,7 +16,9 @@
 writeShellApplication {
   name = "restore-sh1m3ji";
   runtimeInputs = [
+    age
     coreutils
+    gnutar
     jq
     rclone
     restic
