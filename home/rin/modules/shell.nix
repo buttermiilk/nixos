@@ -67,6 +67,14 @@ in
       '';
     };
     initContent = lib.mkMerge [
+      # Attach to (or create) the Zellij session and close the shell with it.
+      # See programs.zellij below for why this replaces the stock integration.
+      (lib.mkOrder 200 ''
+        if [[ -z "$ZELLIJ" && -t 0 && -t 1 ]]; then
+          zellij attach -c
+          exit
+        fi
+      '')
       # Load the packaged preset before the theme, which is sourced at order 900.
       (lib.mkOrder 890 ''
         if [[ -r "$HOME/.p10k.zsh" ]]; then
@@ -141,16 +149,13 @@ in
     };
   };
 
+  # The stock zsh integration also starts Zellij in shells without a terminal,
+  # such as the one Zed runs to read the login environment: Zellij exits at
+  # once, the shell exits with it, and Zed ends up with no PATH. The autostart
+  # in programs.zsh.initContent below only runs on a real terminal.
   programs.zellij = {
     enable = true;
-    enableZshIntegration = true;
-    attachExistingSession = true;
-    exitShellOnExit = true;
-    settings.env = {
-      # Do not let graphics-aware applications select an outer-terminal protocol
-      # that Zellij cannot render. Capability queries can select Sixel instead.
-      TERM_PROGRAM = "zellij";
-    };
+    enableZshIntegration = false;
   };
 
   home.sessionVariables = {

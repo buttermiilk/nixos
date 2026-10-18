@@ -17,7 +17,7 @@ let
     General.Name = profileName;
 
     Output = {
-      Mode = "Advanced";
+      Mode = "Simple";
       FilenameFormatting = "%CCYY-%MM-%DD %hh-%mm-%ss";
       Reconnect = true;
       RetryDelay = 2;
@@ -26,9 +26,25 @@ let
       DynamicBitrate = true;
     };
 
+    # Streaming with x264 ultrafast at 648p48 (tuned in the Settings dialog
+    # on 2026-10-10). On real streams the QuickSync 720p60 setup below
+    # skipped 15% of frames to encoder lag and lagged 8% in rendering, as
+    # osu! keeps the Iris Xe busy; this one lagged 2%.
+    SimpleOutput = {
+      StreamEncoder = "x264";
+      Preset = "ultrafast";
+      VBitrate = 4200;
+      StreamAudioEncoder = "aac";
+      ABitrate = 128;
+      RecEncoder = "x264";
+      RecAudioEncoder = "aac";
+      RecQuality = "Stream";
+      RecFormat2 = "hybrid_mp4";
+      FilePath = "${config.home.homeDirectory}/Videos";
+    };
+
+    # Unused while Output.Mode is "Simple"; kept for switching back.
     AdvOut = {
-      # QuickSync on the Iris Xe media engine keeps encoding off the CPU,
-      # which osu! needs.
       Encoder = "obs_qsv11_v2";
       ApplyServiceSettings = true;
       TrackIndex = 1;
@@ -52,14 +68,14 @@ let
     Video = {
       BaseCX = 1920;
       BaseCY = 1080;
-      OutputCX = 1920;
-      OutputCY = 1080;
-      # 60 divides the panel's refresh rate evenly; 48 caused uneven pacing.
+      OutputCX = 1152;
+      OutputCY = 648;
       FPSType = 0;
-      FPSCommon = 60;
-      ScaleType = "bicubic";
+      FPSCommon = 48;
+      # Bilinear is the cheapest GPU downscale; at 648p it looks the same.
+      ScaleType = "bilinear";
       ColorFormat = "NV12";
-      ColorSpace = "709";
+      ColorSpace = "sRGB";
       ColorRange = "Partial";
     };
 
@@ -70,6 +86,7 @@ let
     };
   };
 
+  # QuickSync encoder settings; only read in the Advanced output mode.
   streamEncoder = builtins.toJSON {
     rate_control = "CBR";
     bitrate = 4500;

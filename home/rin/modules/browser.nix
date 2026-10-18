@@ -1,6 +1,32 @@
-{ ... }:
+{ lib, ... }:
 
 let
+  # Every page renders in the system monospace font. Pages may not load their
+  # own fonts; Firefox still lets known icon fonts through
+  # (browser.display.use_document_fonts.icon_font_allowlist), so icons survive.
+  forcedFont = "FantasqueSansM Nerd Font";
+  forcedFontSettings = {
+    "browser.display.use_document_fonts" = 0;
+  }
+  // lib.listToAttrs (
+    lib.concatMap
+      (
+        lang:
+        map (generic: lib.nameValuePair "font.name.${generic}.${lang}" forcedFont) [
+          "serif"
+          "sans-serif"
+          "monospace"
+        ]
+      )
+      [
+        "x-western"
+        "x-unicode"
+        "x-cyrillic"
+        "el"
+        "ja"
+      ]
+  );
+
   zenExtensionSettings =
     builtins.mapAttrs
       (_: addonSlug: {
@@ -30,6 +56,8 @@ in
     };
 
     profiles.default = {
+      settings = forcedFontSettings;
+
       pins = {
         "YouTube" = {
           id = "681c5e16-722e-4142-aecb-95b48716c139";
@@ -134,6 +162,14 @@ in
       "x-scheme-handler/http" = [ "zen-beta.desktop" ];
       "x-scheme-handler/https" = [ "zen-beta.desktop" ];
       "x-scheme-handler/mailto" = [ "thunderbird.desktop" ];
+
+      # osu!lazer's desktop entry also claims these. Keep them on osu!
+      # stable's handlers, which osu-winello's installer writes to
+      # ~/.local/share/applications; swap in "osu!.desktop" for lazer.
+      "x-scheme-handler/osu" = [ "osuwinello-url-handler.desktop" ];
+      "application/x-osu-beatmap-archive" = [ "osuwinello-file-extensions-handler.desktop" ];
+      "application/x-osu-skin-archive" = [ "osuwinello-file-extensions-handler.desktop" ];
+      "application/x-osu-replay" = [ "osuwinello-file-extensions-handler.desktop" ];
     };
   };
 }

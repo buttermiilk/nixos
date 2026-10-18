@@ -67,8 +67,29 @@
       url = "github:4evy/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
       # Otherwise nixcord locks its own second copies of these.
-      inputs.nixpkgs-nixcord.follows = "nixpkgs";
+      inputs.nixpkgs-packages.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
+    };
+
+    # Discord TUI client with voice and screen sharing; not in nixpkgs 26.05.
+    concord = {
+      url = "github:chojs23/concord/v2.6.1";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "codex-nix/flake-utils";
+    };
+
+    # ArtCraft apps (PhotoCraft, EffectCraft, ...), unofficial. Built from
+    # storytold's release AppImages, pinned to their published hashes and
+    # mirrored, so builds survive upstream deleting a release.
+    artcraft = {
+      url = "github:ipeglin/artcraft-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Native Spotify client (Rust/egui); playback needs Spotify Premium.
+    spotifast = {
+      url = "github:crmne/spotifast/v0.12.0";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -99,7 +120,7 @@
         taiko-editor = final.callPackage ./pkgs/taiko-editor.nix { };
         material-icon-font = final.callPackage ./pkgs/material-icon-font.nix { };
         monitask = final.callPackage ./pkgs/monitask.nix { };
-        tiny10-vm = final.callPackage ./pkgs/tiny10-vm.nix { };
+        tosu = final.callPackage ./pkgs/tosu.nix { };
         neuro-cursor = final.callPackage ./pkgs/neuro-cursor.nix {
           src = ./home/rin/dotfiles/neuro-cursor/theme;
         };
@@ -133,6 +154,7 @@
 
           disko.nixosModules.disko
           sops-nix.nixosModules.sops
+          inputs.artcraft.nixosModules.default
 
           # Apply the custom-packages overlay to the NixOS module system so
           # that host and Home Manager modules can use pkgs.bongocat-osu, etc.
@@ -169,7 +191,7 @@
           monitask
           neuro-cursor
           taiko-editor
-          tiny10-vm
+          tosu
           ;
         restore-sh1m3ji = restoreSh1m3ji;
       };
@@ -186,6 +208,33 @@
           meta.description = "Authorize rclone and store its Google token through SOPS";
         };
       };
+
+      # Native GUI + Rust dev shell (winit/eframe, audio):
+      #   nix develop ~/nixConfig#rust-gui
+      devShells.${system}.rust-gui =
+        let
+          runtimeLibs = with pkgs; [
+            alsa-lib
+            libGL
+            libx11
+            libxcb
+            libxcursor
+            libxi
+            libxkbcommon
+            libxrandr
+            vulkan-loader
+            wayland
+          ];
+        in
+        pkgs.mkShell {
+          packages = [ pkgs.pkg-config ];
+          buildInputs = runtimeLibs;
+          # winit, glutin and cpal dlopen these at runtime. Binaries built by
+          # Nix's rustc use the store's loader, so programs.nix-ld (which only
+          # serves foreign binaries) never sees them. /run/opengl-driver/lib
+          # is where NixOS exposes the Mesa EGL/GL drivers.
+          LD_LIBRARY_PATH = "/run/opengl-driver/lib:${pkgs.lib.makeLibraryPath runtimeLibs}";
+        };
 
       nixosConfigurations.sh1m3ji = sh1m3ji;
       checks.${system} = {

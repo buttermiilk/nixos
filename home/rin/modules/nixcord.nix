@@ -8,9 +8,8 @@ let
   # Nixcord still applies Vencord and the selected Chromium flags around this
   # base package. Removing TTS here keeps Discord from pulling in and starting
   # speech-dispatcher without affecting voice calls.
-  discordWithoutTts = pkgs.discord.override { withTTS = false; };
   leanDiscord = pkgs.callPackage "${inputs.nixcord}/pkgs/discord" {
-    discord = discordWithoutTts;
+    withTTS = false;
   };
 in
 {

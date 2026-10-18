@@ -96,6 +96,11 @@ in
     x11.enable = true;
   };
 
+  # Without Xft.dpi, Zed derives its scale from the panel's physical size
+  # (~166 DPI here) and renders at ~1.7x. Pin the usual 96 that GTK and Qt
+  # already assume. startx doesn't load ~/.Xresources; i3 merges it.
+  xresources.properties."Xft.dpi" = 96;
+
   # Rofi's show-icons setting needs an icon theme installed.
   gtk = {
     enable = true;

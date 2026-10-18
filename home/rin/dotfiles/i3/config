@@ -6,6 +6,9 @@ for_window [class="^.*"] border pixel 3
 # set mod key (Mod1=<Alt>, Mod4=<Super>)
 set $mod Mod4
 
+# startx doesn't load X resources (Xft.dpi, cursor); see desktop.nix.
+exec --no-startup-id xrdb -merge ~/.Xresources
+
 # the 'linux' one is for my Arch installation
 # the other one, 'win', is for my Windows installation but placed in here so I can download it later.
 exec --no-startup-id feh --bg-center ~/.config/wallpapers/linux.jpg
@@ -19,7 +22,7 @@ exec_always --no-startup-id setxkbmap -option
 exec --no-startup-id autotiling
 
 # Font for window titles. Polybar selects its own font in config.ini.
-font pango:Fantasque Sans Mono Bold 13
+font pango:FantasqueSansM Nerd Font Bold 13
 
 # gaps
 gaps outer 5
@@ -45,6 +48,7 @@ bindsym $mod+q kill
 bindsym $mod+d exec --no-startup-id rofi -show drun
 bindsym $mod+Tab exec --no-startup-id rofi -show window
 bindsym $mod+p exec --no-startup-id ~/.config/rofi/powermenu.sh
+bindsym $mod+Shift+x exec --no-startup-id physlock
 
 # toggle the sleep-inhibiting click loop after the chord has been released
 bindsym --release $mod+Mod1+x exec --no-startup-id inhibit-clicker toggle
@@ -100,8 +104,8 @@ bindsym F4 exec --no-startup-id brightnessctl set +10%
 # Microphone mute/unmute
 bindsym F8 exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
-# Screenshot
-bindsym F12 exec flameshot gui
+# Screenshot (Super+Shift+S matches the Windows snipping shortcut)
+bindsym $mod+Shift+s exec --no-startup-id flameshot gui
 
 # split orientation
 bindsym $mod+z split h;exec notify-send 'tile horizontally'

@@ -478,27 +478,14 @@ turbo, EPP `power`, low-power platform profile), stops picom, and caps
 brightness at 40%. Polybar shows `eco` while it's on; click it or press `$mod+b`
 again to restore all three. It resets on reboot.
 
-#### GIMP (PhotoGIMP)
+#### PhotoCraft and EffectCraft
 
-GIMP's first run is seeded with [PhotoGIMP](https://github.com/Diolinux/PhotoGIMP)
-3.1 (Photoshop shortcuts and layout, 50 undo levels). GIMP owns those files
-afterwards; delete `~/.config/GIMP/3.0` and rebuild to reset to PhotoGIMP.
-
-#### Small Windows VMs
-
-`tiny10-vm` is the low-resource option. It downloads NTDEV's Tiny10 23H2 x64
-(based on Windows 10 IoT Enterprise LTSC 2021), verifies it, and creates a sparse
-20 GiB disk under `~/.local/share/tiny10-vm`. It uses two vCPUs and 2 GiB of RAM.
-
-After installing Windows, open the small guest-tools drive, run
-`spice-guest-tools.exe` and `spice-webdavd-x64-2.4.msi` as Administrator, then
-restart Windows. This enables host/guest clipboard integration and exposes
-`/home/rin/Documents` as a read-write SPICE WebDAV drive. If the shared drive
-does not appear automatically, run
-`C:\Program Files\SPICE webdavd\map-drive.bat` in the guest.
-
-Tiny10 is an unofficial, modified Windows image. Its `23H2` is the Tiny10 release
-name; the underlying Windows release is IoT Enterprise LTSC 2021 (21H2).
+[PhotoCraft](https://github.com/storytold/photocraft) (Photoshop) and
+[EffectCraft](https://github.com/storytold/effectcraft) (After Effects) are
+from the open-source ArtCraft suite. They are young and release often; to
+update, take the new version from the GitHub releases and the AppImage's
+checksum from that release's `SHA256SUMS.txt`, then update `version` and
+`hash` in `pkgs/photocraft.nix` or `pkgs/effectcraft.nix`.
 
 ### Check the rollback
 

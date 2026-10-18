@@ -6,11 +6,36 @@
   ...
 }:
 
+let
+  # Sets the hub's 3.5 mm jack (0020:0b21) unauthorized while the Chu2 DSP
+  # (31b2:0113) is present, authorized otherwise. udev runs it on add/remove of
+  # either device. On remove the Chu2's sysfs entry is already gone, so a Chu2
+  # remove event is treated as "absent".
+  chu2Exclusive = pkgs.writeShellScript "chu2-exclusive" ''
+    chu2=0
+    jacks=
+    for d in /sys/bus/usb/devices/*; do
+      [ -r "$d/idVendor" ] || continue
+      case "$(${pkgs.coreutils}/bin/cat "$d/idVendor"):$(${pkgs.coreutils}/bin/cat "$d/idProduct")" in
+        31b2:0113) chu2=1 ;;
+        0020:0b21) jacks="$jacks $d" ;;
+      esac
+    done
+    if [ "$ACTION" = remove ] && [ "''${PRODUCT%%/*}" = 31b2 ]; then
+      chu2=0
+    fi
+    for d in $jacks; do
+      echo $((1 - chu2)) > "$d/authorized"
+    done
+  '';
+in
+
 {
   imports = [
     ./hardware-configuration.nix
     ./disko.nix
     ./rollback.nix
+    ./power-limit.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -59,12 +84,75 @@
   };
   services.libinput.enable = true;
 
+  # physlock locks every VT (X session included) and blocks VT switching, so
+  # it works from i3 and from a plain tty, without ending the session.
+  services.physlock = {
+    enable = true;
+    allowAnyUser = true; # setuid wrapper, so the user can run it unprivileged
+    muteKernelMessages = true;
+  };
+
   # PipeWire with PulseAudio compat, so the pactl volume binds in i3 keep working
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     pulse.enable = true;
+
+    # Moondrop Chu2 DSP low-latency profile
+    #
+    # The Chu2 is a full-speed (12 Mbps) async USB device, so it needs
+    # different settings from PipeWire's defaults:
+    #
+    #   audio.format = S16LE
+    #     The default S24_3LE altset played at the wrong pitch and glitched.
+    #     16-bit also uses less of the shared full-speed bandwidth.
+    #   audio.rate = 48000
+    #     Matches the graph rate, so nothing is resampled.
+    #   api.alsa.period-size = 512, api.alsa.period-num = 3
+    #     The driver HALVES the requested period, so this gives a real
+    #     256-frame period and a 768-frame buffer (~16 ms). Measured values:
+    #       default            128 x 256 periods  huge buffer, high latency
+    #       first fix         512 x 3, buffer 1536  ~33 ms delay, uneven offset
+    #       request 256 x 2   128 x 2, buffer 256   ~9 ms, good offset, but the
+    #                          graph quantum dropped to 128 and voice-chat
+    #                          streams (360/1440-frame requests) crackled with
+    #                          "spa.audioconvert: out of buffers"
+    #       request 512 x 3   256 x 3, buffer 768   current: quantum 256 matches
+    #                          osu!'s request, no starvation, offset acceptable
+    #     If the offset needs to go lower, try 256 x 3, but expect the voice
+    #     crackle to return. If crackling returns at this setting, try 1024 x 3.
+    #   api.alsa.headroom = 0
+    #     No extra ALSA-side padding on top of the buffer above.
+    #
+    # Bandwidth: the Chu2 and the hub's 3.5 mm jack are both full-speed audio
+    # behind the hub's single transaction translator, which fits only one. See
+    # the chu2Exclusive udev rule below.
+    wireplumber.extraConfig."51-chu2-dsp" = {
+      "monitor.alsa.rules" = [
+        {
+          matches = [ { "node.name" = "~alsa_output.usb-KTMicro_Chu2_DSP.*"; } ];
+          actions.update-props = {
+            "audio.format" = "S16LE";
+            "audio.rate" = 48000;
+            "api.alsa.period-size" = 512;
+            "api.alsa.period-num" = 3;
+            "api.alsa.headroom" = 0;
+          };
+        }
+      ];
+    };
+  };
+
+  # ArtCraft's Photoshop and After Effects counterparts (early releases), from
+  # the artcraft flake input. The module also links /usr/share/fonts, the
+  # only place the apps' text tools look for fonts.
+  programs.artcraft = {
+    enable = true;
+    apps = [
+      "photocraft"
+      "effectcraft"
+    ];
   };
 
   # Sober is installed from Flathub as a per-user Flatpak after first boot.
@@ -84,10 +172,22 @@
   # pull in the legacy i965 driver and Intel's CPU OpenCL runtime.
   hardware.intelgpu.vaapiDriver = "intel-media-driver";
 
-  # `gamemoderun` (used by the osu-winello wrapper) switches the CPU to the
-  # performance governor/EPP while a game runs, so TLP's balanced profile
-  # cannot cause frequency-ramp stutter mid-map.
-  programs.gamemode.enable = true;
+  # gamemode is requested by the osu-winello wrapper for each osu!.exe. It
+  # used to switch to the performance governor, but that pins every core at
+  # full boost: on 2026-10-12 three idle tourney clients held 3.4 GHz at
+  # 83 °C and the iGPU was clamped by the shared PL1 budget (see
+  # power-limit.nix). powersave with balance_performance EPP still ramps
+  # within milliseconds under HWP and leaves that budget to the GPU, so keep
+  # it. Its polkit rule only lets members of the `gamemode` group change the
+  # governor (see users.users.rin).
+  programs.gamemode = {
+    enable = true;
+    settings.general.desiredgov = "powersave";
+  };
+
+  # Sustained gaming load hits the package thermal limit hard. thermald steps
+  # power down gradually instead of leaving it to abrupt PROCHOT throttling.
+  services.thermald.enable = true;
 
   # nixos-hardware's laptop profile enables TLP. `eco-mode` switches it to
   # the power-saver profile (`_SAV` values); AC and BAT values must be given
@@ -139,6 +239,12 @@
   # HID device world-writable.
   services.udev.extraRules = ''
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="19f5", ATTRS{idProduct}=="6120|6f10", MODE="0660", GROUP="users", TAG+="uaccess"
+
+    # The Chu2 DSP (31b2:0113) and the 3.5 mm jack on the USB hub (0020:0b21)
+    # are both full-speed audio devices behind the hub's single transaction
+    # translator, which has bandwidth for only one. Deauthorize the jack while
+    # the Chu2 is plugged in and bring it back once the Chu2 is gone.
+    ACTION=="add|remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{PRODUCT}=="31b2/113/*|20/b21/*", RUN+="${chu2Exclusive}"
   '';
 
   programs.zsh.enable = true;
@@ -220,6 +326,7 @@
       "networkmanager"
       "kvm"
       "video"
+      "gamemode"
     ];
     hashedPasswordFile = config.sops.secrets."rin/password".path;
   };
@@ -230,13 +337,19 @@
   services.tumbler.enable = true;
   programs.dconf.enable = true;
 
-  # System-wide font families and smooth LCD rendering. Generic family names
+  # FreeType disables stem darkening by default. Turning it on emboldens thin
+  # stems at small sizes the way macOS (and recent Windows) do, which pairs
+  # with the grayscale, lightly hinted rendering below.
+  environment.variables.FREETYPE_PROPERTIES = "cff:no-stem-darkening=0 autofitter:no-stem-darkening=0";
+
+  # System-wide font families and macOS-style rendering. Generic family names
   # such as "sans-serif" and "monospace" inherit these choices in GTK, X11,
   # browsers, and other fontconfig-aware applications.
   fonts = {
     packages = with pkgs; [
       adwaita-fonts
-      fantasque-sans-mono
+      nerd-fonts.fantasque-sans-mono # monospace
+      googlesans-code # monospace fallback; covers Vietnamese, Fantasque does not
       noto-fonts-cjk-sans
       noto-fonts-color-emoji
       material-icon-font
@@ -245,13 +358,17 @@
     fontconfig = {
       enable = true;
       antialias = true;
+      # Slight hinting snaps only vertical metrics, keeping glyph shapes
+      # faithful instead of forcing them onto the pixel grid.
       hinting = {
         enable = true;
         style = "slight";
       };
+      # Grayscale antialiasing instead of RGB subpixel: no colour fringes and
+      # a softer, more even look, as on macOS.
       subpixel = {
-        rgba = "rgb";
-        lcdfilter = "default";
+        rgba = "none";
+        lcdfilter = "none";
       };
       defaultFonts = {
         sansSerif = [
@@ -263,11 +380,39 @@
           "Noto Sans CJK SC"
         ];
         monospace = [
-          "Fantasque Sans Mono"
+          "FantasqueSansM Nerd Font"
+          "Google Sans Code"
           "Noto Sans CJK SC"
         ];
         emoji = [ "Noto Color Emoji" ];
       };
+      # Apps that request Fantasque by name (Discord, VSCodium) skip the
+      # monospace list above, so chain the fallback onto the family itself.
+      localConf = ''
+        <?xml version="1.0"?>
+        <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+        <fontconfig>
+          <alias binding="same">
+            <family>FantasqueSansM Nerd Font</family>
+            <accept><family>Google Sans Code</family></accept>
+          </alias>
+          <!-- With hintslight, Chromium's Skia leaves horizontal metrics
+               unhinted, so glyphs straddle pixels and look smeared next to
+               Pango. Medium hinting brings Electron apps back in line. -->
+          <match target="font">
+            <test name="prgname" compare="eq"><string>codium</string></test>
+            <edit name="hintstyle" mode="assign"><const>hintmedium</const></edit>
+          </match>
+          <match target="font">
+            <test name="prgname" compare="eq"><string>.Discord-wrapped</string></test>
+            <edit name="hintstyle" mode="assign"><const>hintmedium</const></edit>
+          </match>
+          <match target="font">
+            <test name="prgname" compare="eq"><string>Discord</string></test>
+            <edit name="hintstyle" mode="assign"><const>hintmedium</const></edit>
+          </match>
+        </fontconfig>
+      '';
     };
   };
 

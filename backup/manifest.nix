@@ -38,6 +38,9 @@
     "/home/rin/Documents/Dev/**/node_modules"
     "/home/rin/Documents/osu/Data"
     "/home/rin/Documents/osu/Logs"
+    # osu!lazer's data folder: rebuildable caches and per-session logs.
+    "/home/rin/Documents/osu-lazer/cache"
+    "/home/rin/Documents/osu-lazer/logs"
 
     # Never restore stale browser locks.
     "/home/rin/.config/zen/**/.parentlock"
