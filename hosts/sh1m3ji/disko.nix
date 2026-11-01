@@ -1,5 +1,6 @@
 # Declarative partition layout, applied once at install time by disko.
-# Single-disk layout: an ESP plus one LUKS2 volume containing btrfs subvolumes.
+# Dell WD SN530 256 GB: 1 GiB ESP, then LUKS2/Btrfs using the remaining space.
+# Replaces Windows and its recovery partitions; no dual boot.
 # `/root` is replaced with an empty subvolume during early boot by rollback.nix.
 # State survives only through the direct mounts below; no bind mounts are used.
 let
@@ -12,12 +13,13 @@ in
   disko.devices = {
     disk.main = {
       type = "disk";
-      device = "/dev/nvme0n1"; # the Samsung 512 GB — verify with `lsblk` before running disko!
+      device = "/dev/nvme0n1"; # WD PC SN530 256 GB — verify with `lsblk` in the live ISO!
       content = {
         type = "gpt";
         partitions = {
           esp = {
-            size = "512M";
+            # Room for kernels/initrds across the five retained boot entries.
+            size = "1G";
             type = "EF00";
             content = {
               type = "filesystem";
@@ -85,6 +87,7 @@ in
                   };
                   "/swap" = {
                     mountpoint = "/swap";
+                    # Overflow behind zram; suspend-to-disk is not configured.
                     swap.swapfile.size = "8G";
                   };
                 };

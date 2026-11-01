@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Aggressive battery saving: TLP's power-saver profile (no turbo, EPP power,
-# low-power platform profile), the eco CPU power limit, no compositor, and a
+# low-power platform profile), optional host CPU power limits, no compositor, and a
 # brightness cap.
 # The marker lives in the runtime dir, so it resets on reboot just like TLP.
 
@@ -29,7 +29,9 @@ on_ac() {
 enable() {
   mkdir -p "$state_dir"
   /run/wrappers/bin/sudo "$tlp" power-saver >/dev/null
-  /run/wrappers/bin/sudo "$power_limit" eco
+  if [[ -x "$power_limit" ]]; then
+    /run/wrappers/bin/sudo "$power_limit" eco
+  fi
   pkill -x picom || true
 
   current=$(brightnessctl -m | cut -d, -f4 | tr -d %)
@@ -39,7 +41,7 @@ enable() {
   fi
 
   bar 1
-  notify-send -u low "Eco mode" "On: power-saver, low power limit, no compositor, brightness ≤ ${brightness_cap}%"
+  notify-send -u low "Eco mode" "On: power-saver, no compositor, brightness ≤ ${brightness_cap}%"
 }
 
 disable() {
@@ -48,7 +50,9 @@ disable() {
   else
     /run/wrappers/bin/sudo "$tlp" balanced >/dev/null
   fi
-  /run/wrappers/bin/sudo "$power_limit" normal
+  if [[ -x "$power_limit" ]]; then
+    /run/wrappers/bin/sudo "$power_limit" normal
+  fi
   pgrep -x picom >/dev/null || i3-msg -q "exec --no-startup-id picom --config $HOME/.config/picom/picom.conf"
 
   if [[ -r "$brightness_file" ]]; then

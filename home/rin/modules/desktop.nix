@@ -9,6 +9,24 @@ let
     i3Support = true;
   };
 
+  startPolybar = pkgs.writeShellApplication {
+    name = "start-polybar";
+    runtimeInputs = [ materialPolybar ];
+    text = ''
+      # ACPI supply names vary between the HP and Dell firmware.
+      export POLYBAR_BATTERY=BAT0 POLYBAR_ADAPTER=AC
+      for supply in /sys/class/power_supply/*; do
+        [[ -r "$supply/type" ]] || continue
+        read -r supply_type < "$supply/type"
+        case "$supply_type" in
+          Battery) POLYBAR_BATTERY="''${supply##*/}" ;;
+          Mains) POLYBAR_ADAPTER="''${supply##*/}" ;;
+        esac
+      done
+      exec polybar main
+    '';
+  };
+
   inhibitClicker = pkgs.writeShellApplication {
     name = "inhibit-clicker";
     runtimeInputs = with pkgs; [
@@ -46,6 +64,7 @@ in
     autotiling
     rofi
     materialPolybar
+    startPolybar
     flameshot
     libnotify # notify-send, used by the i3 split-orientation binds
     brightnessctl

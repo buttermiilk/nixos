@@ -1,4 +1,4 @@
-# HP EliteBook 630 G9 — i5-1235U, Iris Xe, 12 GB RAM, 512 GB NVMe
+# Dell Latitude 5421 — i7-11850H, Intel UHD, 16 GB RAM, 256 GB NVMe
 {
   config,
   lib,
@@ -35,7 +35,6 @@ in
     ./hardware-configuration.nix
     ./disko.nix
     ./rollback.nix
-    ./power-limit.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -53,6 +52,9 @@ in
 
   networking.hostName = "sh1m3ji";
   networking.networkmanager.enable = true;
+
+  # QCA6174 Wi-Fi/Bluetooth and Intel Smart Sound need redistributable firmware.
+  hardware.enableRedistributableFirmware = true;
 
   # Prefer IPv4 when a destination publishes both address families. Some
   # networks advertise an IPv6 default route without providing working IPv6;
@@ -168,25 +170,20 @@ in
   services.cloudflare-warp.enable = true;
 
   # nixos-hardware's common-cpu-intel already enables graphics and adds the
-  # VAAPI/compute runtimes. Iris Xe only needs iHD; the default (null) would also
+  # VAAPI/compute runtimes. Tiger Lake UHD uses iHD; the default (null) would also
   # pull in the legacy i965 driver and Intel's CPU OpenCL runtime.
   hardware.intelgpu.vaapiDriver = "intel-media-driver";
 
-  # gamemode is requested by the osu-winello wrapper for each osu!.exe. It
-  # used to switch to the performance governor, but that pins every core at
-  # full boost: on 2026-10-12 three idle tourney clients held 3.4 GHz at
-  # 83 °C and the iGPU was clamped by the shared PL1 budget (see
-  # power-limit.nix). powersave with balance_performance EPP still ramps
-  # within milliseconds under HWP and leaves that budget to the GPU, so keep
-  # it. Its polkit rule only lets members of the `gamemode` group change the
-  # governor (see users.users.rin).
+  # Keep HWP frequency scaling during osu!: CPU and iGPU share a power budget.
+  # The old HP's measured RAPL limits in power-limit.nix are not imported on
+  # this Dell; leave package limits to its firmware and thermald until tested.
   programs.gamemode = {
     enable = true;
     settings.general.desiredgov = "powersave";
   };
 
-  # Sustained gaming load hits the package thermal limit hard. thermald steps
-  # power down gradually instead of leaving it to abrupt PROCHOT throttling.
+  # thermald 2.4.9+ includes a Latitude 5421 performance fix; the lock pins
+  # 2.5.11. Keep the default adaptive policy for this Dell's DPTF tables.
   services.thermald.enable = true;
 
   # nixos-hardware's laptop profile enables TLP. `eco-mode` switches it to
@@ -219,7 +216,7 @@ in
     }
   ];
 
-  # 12 GB is tight with Discord, Zen, and an IDE open. Compressed RAM swap is
+  # Keep memory pressure manageable with the browser, games and IDE open. RAM swap is
   # used before the disk swapfile, avoiding multi-second stalls on LUKS+Btrfs.
   zramSwap = {
     enable = true;

@@ -38,12 +38,23 @@ Do note those reference sections were model-written.
 
 ## Quickstart
 
+Current target: Dell Latitude 5421. Read the [hardware assessment and live ISO
+checks](hosts/sh1m3ji/COMPATIBILITY.md) before partitioning.
+
 Normal reinstall: the machine age key exists on the backup drive, the repo is
-on GitHub, and the target is the EliteBook's internal NVMe. Boot the NixOS
+on GitHub, and the target is the Latitude 5421's internal WD SN530 256 GB NVMe. Boot the NixOS
 graphical ISO in UEFI mode, skip the installer, and open a terminal.
 
 > [!CAUTION]
-> Step 3 erases the disk named in `hosts/sh1m3ji/disko.nix` (`/dev/nvme0n1`).
+> Step 3 erases Windows, recovery partitions, and all data on the disk named
+> in `hosts/sh1m3ji/disko.nix` (`/dev/nvme0n1`). The target is the **256 GB WD
+> SN530**, not the connected 500 GB JMicron disk.
+
+Before leaving Windows, save this updated repository and the machine age key
+off the internal disk. A GitHub clone only contains changes already pushed;
+otherwise copy this working tree from the backup drive into `~/nix-config`.
+In firmware, disable Secure Boot for this unsigned systemd-boot setup and boot
+the USB in UEFI mode. Check that the AC adapter wattage is recognized.
 
 ```sh
 # 1. prepare
@@ -60,24 +71,36 @@ SOPS_AGE_KEY_FILE=/tmp/keys.txt sops decrypt secrets/secrets.yaml >/dev/null && 
 age-keygen -y /tmp/keys.txt                   # must equal &sh1m3ji in .sops.yaml
 lsblk -d -o NAME,PATH,SIZE,MODEL,SERIAL,TRAN  # must match the next line
 grep -n 'device =' hosts/sh1m3ji/disko.nix
+# The generated file must describe this Dell, not the previous HP.
+sudo nixos-generate-config --no-filesystems --show-hardware-config \
+  > /tmp/dell-hardware.nix
+test -s /tmp/dell-hardware.nix && cp /tmp/dell-hardware.nix hosts/sh1m3ji/hardware-configuration.nix
+git add hosts/sh1m3ji/hardware-configuration.nix
+git diff --cached -- hosts/sh1m3ji/hardware-configuration.nix
 nix --extra-experimental-features "nix-command flakes" \
   flake check --no-build --no-update-lock-file
+# Complete the compatibility report's Wi-Fi, sleep and thermal tests now.
+# Disconnect backup/data drives after copying the repo and key into the live session.
 
 # 3. erase, partition, install (save the printed LUKS recovery key off-device)
 sudo nix --extra-experimental-features "nix-command flakes" \
-  run .#disko -- --mode destroy,format,mount --flake .#sh1m3ji
+  run --no-update-lock-file .#disko -- --mode destroy,format,mount --flake .#sh1m3ji
+findmnt -R /mnt
+swapon --show
 sudo nixos-generate-config --no-filesystems --root /mnt
 cp /mnt/etc/nixos/hardware-configuration.nix hosts/sh1m3ji/
 git add hosts/sh1m3ji/hardware-configuration.nix
+nix --extra-experimental-features "nix-command flakes" \
+  flake check --no-build --no-update-lock-file
 sudo install -Dm600 /tmp/keys.txt /mnt/persist/var/lib/sops-nix/age/keys.txt
-sudo nixos-install --flake .#sh1m3ji --no-root-passwd
+sudo nixos-install --flake .#sh1m3ji --no-root-passwd --no-update-lock-file
 
 # 4. restore the latest backup (optional; check the dry run, then type RESTORE)
 sudo nix --extra-experimental-features "nix-command flakes" \
-  run .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
+  run --no-update-lock-file .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
   --secrets-file "$PWD/secrets/secrets.yaml" --snapshot latest --dry-run
 sudo nix --extra-experimental-features "nix-command flakes" \
-  run .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
+  run --no-update-lock-file .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
   --secrets-file "$PWD/secrets/secrets.yaml" --snapshot latest
 
 # 5. keep the repo and user key, reboot
@@ -113,6 +136,7 @@ pkgs/                            locally maintained package derivations
 hosts/sh1m3ji/
   default.nix                    system config
   disko.nix                      disk layout
+  COMPATIBILITY.md               Dell inventory, Linux findings and live tests
   rollback.nix                   systemd-initrd root replacement
   hardware-configuration.nix     generated on the actual hardware
 home/rin/
@@ -125,6 +149,12 @@ secrets/secrets.yaml             sops-encrypted secrets
 The encrypted Btrfs filesystem gets a fresh `/root` subvolume before every boot. 
 State survives through direct sibling-subvolume mounts for `/nix`, `/home`, `/persist`, 
 selected `/var` state, NetworkManager connections, and swap.
+
+On the 256 GB WD SN530, GPT contains a 1 GiB FAT32 EFI partition and a LUKS2
+partition using the remaining space. All Btrfs subvolumes share that space;
+`/home` and `/nix` have no fixed size split. Disk swap reserves 8 GiB inside
+LUKS, and zram uses up to half of RAM. Hibernation is not configured. The EFI
+partition holds the kernels and initrds for up to five boot generations.
 
 The reason why I said `impermanence` was iffy on 26.05 is because at the moment 
 I write this there is still an issue opening for the new boot order, I'm not 
@@ -174,6 +204,18 @@ The installation and Disko must use the committed `flake.lock`, hence
 Nix says a file doesn't exist while it clearly does, it needs `git add`. It does
 not need to be committed during the live session.
 
+`flake check --no-build` evaluates the configuration; it does not prove that
+every package builds. If time and live-session storage allow, build before
+erasing:
+
+```sh
+nix --extra-experimental-features "nix-command flakes" \
+  build --no-update-lock-file --no-link \
+  .#nixosConfigurations.sh1m3ji.config.system.build.toplevel
+```
+
+This is a large desktop closure; a live session may not have enough space.
+
 ### Disko
 
 `--mode destroy,format,mount` is the point of no return. It creates the ESP, the
@@ -187,15 +229,21 @@ should resolve through `/dev/mapper/crypted`. `/root` (mounted at `/`) is
 discarded on every boot; everything else in `disko.nix` is a sibling subvolume
 mounted directly at its final path. There are no Impermanence bind mounts.
 
-If the internal NVMe isn't `/dev/nvme0n1`, edit `device` in
-`hosts/sh1m3ji/disko.nix` before running Disko.
+Verify the internal WD SN530 is about 238.5 GiB (`256052966400` bytes), not the
+500 GB JMicron-attached disk. If it is not `/dev/nvme0n1`, edit `device` in
+`hosts/sh1m3ji/disko.nix` before running Disko. A verified whole-disk
+`/dev/disk/by-id/nvme-...` path from the live ISO is also suitable; do not use
+a `-partN` path or guess a Linux ID from the Windows serial. Stage any new
+files and repeat flake evaluation after edits.
 
 ### Hardware configuration
 
 `nixos-generate-config --no-filesystems` is intentional: Disko owns all
-filesystem and swap declarations. Inspect the diff
-(`git diff --cached -- hosts/sh1m3ji/hardware-configuration.nix`) and re-run
-`flake check` if anything beyond kernel modules changed.
+filesystem and swap declarations. The quickstart first scans the Dell from
+the ISO so evaluation uses its hardware before partitioning, then refreshes
+the scan against `/mnt` afterward. Inspect the staged diff and repeat
+`flake check` before installation. Do not copy generated filesystem or swap
+declarations into the flake; Disko supplies those.
 
 ### Installing
 
@@ -476,7 +524,8 @@ live under `~/.config/obs-studio/basic`, which the backup covers.
 `$mod+b` (or `eco-mode toggle`) switches TLP to its power-saver profile (no
 turbo, EPP `power`, low-power platform profile), stops picom, and caps
 brightness at 40%. Polybar shows `eco` while it's on; click it or press `$mod+b`
-again to restore all three. It resets on reboot.
+again to restore all three. It resets on reboot. The old HP's custom RAPL
+limits are disabled on the Dell; eco mode still uses TLP, picom and brightness.
 
 #### PhotoCraft and EffectCraft
 

@@ -16,7 +16,7 @@ exec --no-startup-id feh --bg-center ~/.config/wallpapers/linux.jpg
 exec --no-startup-id picom --config ~/.config/picom/picom.conf
 exec --no-startup-id fcitx5 -d
 exec --no-startup-id blueman-applet
-exec --no-startup-id polybar main
+exec --no-startup-id start-polybar
 exec_always --no-startup-id setxkbmap -option
 # `exec`, not `exec_always`: every i3 reload would otherwise start another copy.
 exec --no-startup-id autotiling
