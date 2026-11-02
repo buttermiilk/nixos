@@ -35,6 +35,7 @@ in
     ./hardware-configuration.nix
     ./disko.nix
     ./rollback.nix
+    ./power-limit.nix
   ];
 
   boot.loader.systemd-boot.enable = true;
@@ -175,8 +176,7 @@ in
   hardware.intelgpu.vaapiDriver = "intel-media-driver";
 
   # Keep HWP frequency scaling during osu!: CPU and iGPU share a power budget.
-  # The old HP's measured RAPL limits in power-limit.nix are not imported on
-  # this Dell; leave package limits to its firmware and thermald until tested.
+  # power-limit.nix caps the Dell at 30 W; thermald can still lower it further.
   programs.gamemode = {
     enable = true;
     settings.general.desiredgov = "powersave";

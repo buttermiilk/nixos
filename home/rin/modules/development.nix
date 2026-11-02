@@ -71,7 +71,7 @@ in
     package = inputs.codex-nix.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
     settings = {
-      model = "gpt-5.6-sol";
+      model = "gpt-6.1-sol";
       model_reasoning_effort = "high";
 
       approvals_reviewer = "auto_review";

@@ -101,7 +101,6 @@ let
       inherit (cargoToml.package) version description homepage;
       src = craneLib.cleanCargoSource src;
     };
-  spotifast = inputs.spotifast.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
   # Concord draws images with Kitty's Unicode placeholders, which Zellij 0.45
   # rejects. A command given to kitty skips the login shell, so Zellij never
@@ -173,8 +172,6 @@ in
     # Screen sharing needs nothing extra here: Concord captures natively on
     # X11 and encodes with the host's VA-API driver (intel-media-driver).
     mpv
-
-    spotifast
   ];
 
   # Same ID as the package's own entry, so this one replaces it (in rofi and

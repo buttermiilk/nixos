@@ -8,8 +8,7 @@
 > should be aimed at the goal of the least entropy (as in, a *somewhat 
 > stable system*), and this notice will go away when that is mostly done.
 >
-> I try to keep my READMEs human, but you may find older commits feature 
-> a fully model-written one. 
+> README has not went through content checking, so for now this is half written by a model.
 
 ## About this
 
@@ -524,8 +523,9 @@ live under `~/.config/obs-studio/basic`, which the backup covers.
 `$mod+b` (or `eco-mode toggle`) switches TLP to its power-saver profile (no
 turbo, EPP `power`, low-power platform profile), stops picom, and caps
 brightness at 40%. Polybar shows `eco` while it's on; click it or press `$mod+b`
-again to restore all three. It resets on reboot. The old HP's custom RAPL
-limits are disabled on the Dell; eco mode still uses TLP, picom and brightness.
+again to restore all three. It resets on reboot. The Dell has a separate 30 W
+ceiling for sustained and boost CPU package power (including the iGPU), applied
+in every profile. Thermald can reduce it further as needed for cooling.
 
 #### PhotoCraft and EffectCraft
 
