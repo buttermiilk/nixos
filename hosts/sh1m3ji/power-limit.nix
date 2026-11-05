@@ -1,11 +1,7 @@
 { lib, pkgs, ... }:
 
 let
-  # Latitude 5421 / i7-11850H: the firmware's 45 W sustained / 90 W boost
-  # policy reached 98-100 C within seconds during the 2026-11-02 load check.
-  # Cap both package limits at 30 W, including the shared iGPU budget.
-  # Keep thermald's adaptive policy: only lower limits above our ceiling,
-  # never raise a stricter limit selected for thermal protection.
+
   powerLimit = pkgs.writeShellApplication {
     name = "apply-package-power-cap";
     text = ''
@@ -42,8 +38,6 @@ in
 {
   environment.systemPackages = [ powerLimit ];
 
-  # Firmware and thermald can reset RAPL. Apply after boot/resume and check
-  # periodically without repeatedly writing limits that already satisfy it.
   systemd.services.power-limit = {
     description = "Cap CPU package sustained and boost power at 30 W";
     wantedBy = [

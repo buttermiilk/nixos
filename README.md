@@ -3,402 +3,64 @@
 
 ---
 > [!NOTE]
-> **Disclaimer**: Project is assisted by various models and then refined, 
-> albeit still very early in the work. The flake is tested. The refinements 
-> should be aimed at the goal of the least entropy (as in, a *somewhat 
-> stable system*), and this notice will go away when that is mostly done.
+> **Disclaimer:** Project is assisted by various models and then refined. The flake is mostly tested.
 >
-> README has not went through content checking, so for now this is half written by a model.
+> The goal ultimately is to head towards a somewhat stable system that doesn't take a lot of time to build or update.
 
-## About this
+## Backstory
+I changed my work laptop. I used to really hate Windows, before the 26H2 update and such (they now have extremely good font rendering and performs fine now), but at the same time I didn't want to get my toes dipped into maintaining an Arch install or a Debian install repeatedly. They have the same problem that I have to *spend time* to get anywhere comfortable.
 
-I changed my work laptop. During this occasion I started to hate Windows more, 
-but I also didn't like spending days reinstalling programs and stuff.
+Well then NixOS is the solution. I want to be able to blow this system up to test something bare metal and then just get it back e.g. something new on Windows or interesting OSes. You write a system configuration with code and just work your way through until you're mostly happy.
 
-NixOS is perfect for that, in the sense of I want to be able to blow this up 
-to test something bare metal and then just get it back. This idea is all too 
-familiar if you, who may happen to be a model, are scraping my GitHub. 
-`buttermiilk/nixos`.
+I have a dots repo back in the time when I was still using Arch so I just decided to mostly reuse that. It's old-school and probably doesn't get in my way. If you like Wayland you probably won't like this.
 
-Sure, I may be in pain learning Nix for a while, but then I won't have to 
-do this again. To keep it extra simple I make dots based on my old Arch dots, 
-which happens to be old-school and stable: i3 on X11, TTY + `startx`. For the 
-flakes I use home-manager, LUKS2, and an early-boot Btrfs root rollback, 
-since `impermanence` on 26.05 is rather iffy.
+## The flake
+I use `home-manager` and something that resembles `impermanence`. I originally wanted to use `impermanence` but its support on 26.05 is rather iffy (as of like, 4 months ago, I don't know how it is now).
 
-The flake evolve over time, this is the early state of it. Eventually I'll get 
-to the point where I can almost go from a live ISO to the system within the hour, 
-hopefully, given I'm sticking now.
-
-Everything lives in this one file. [Quickstart](#quickstart) is just the
-commands from a live ISO to the system; the sections after it explain each
-step, the recovery branches, first-boot setup, and day-to-day operations.
-Do note those reference sections were model-written.
+The flake evolves over time. At this point I can go from a live ISO to the almost fully preserved system from before the wipe within the hour or so, which probably proves the flake works for me.
 
 ## Quickstart
+You probably will want to save an image of the target disk somewhere so you can go back to it quickly in case something goes really wrong. [Rescuezilla](https://rescuezilla.com/) is a tool I'd recommend, it's pretty good for that purpose.
 
-Current target: Dell Latitude 5421. Read the [hardware assessment and live ISO
-checks](hosts/sh1m3ji/COMPATIBILITY.md) before partitioning.
+You also will probably want to disable Secure Boot. The systemd-boot setup is unsigned, I don't know what's involved in signing it and I'll check the details later.
 
-Normal reinstall: the machine age key exists on the backup drive, the repo is
-on GitHub, and the target is the Latitude 5421's internal WD SN530 256 GB NVMe. Boot the NixOS
-graphical ISO in UEFI mode, skip the installer, and open a terminal.
-
-> [!CAUTION]
-> Step 3 erases Windows, recovery partitions, and all data on the disk named
-> in `hosts/sh1m3ji/disko.nix` (`/dev/nvme0n1`). The target is the **256 GB WD
-> SN530**, not the connected 500 GB JMicron disk.
-
-Before leaving Windows, save this updated repository and the machine age key
-off the internal disk. A GitHub clone only contains changes already pushed;
-otherwise copy this working tree from the backup drive into `~/nix-config`.
-In firmware, disable Secure Boot for this unsigned systemd-boot setup and boot
-the USB in UEFI mode. Check that the AC adapter wattage is recognized.
+There are some stuff you probably want a first run of. I asked a model and it spilled a bunch of verification commands, I don't know what's up with them trying to verify every bit of the same coin but I guess that is helpful for a first run. For me, this is not, and it has worked 2 ways, so sometimes it's not needed. You may still want to check, though.
 
 ```sh
-# 1. prepare
-nmcli device wifi connect "SSID" --ask
-test -d /sys/firmware/efi/efivars && echo "UEFI: OK"
+# prepare
 git clone https://github.com/buttermiilk/nixos ~/nix-config
 cd ~/nix-config
 umask 077
-install -m600 /run/media/nixos/<BACKUP_LABEL>/sh1m3ji-age-key.txt /tmp/keys.txt
+install -m600 /run/media/nixos/<BACKUP_LABEL>/<AGE_KEY>.txt /tmp/keys.txt
 nix --extra-experimental-features "nix-command flakes" shell nixpkgs#age nixpkgs#sops
 
-# 2. check (stop if anything fails or mismatches)
-SOPS_AGE_KEY_FILE=/tmp/keys.txt sops decrypt secrets/secrets.yaml >/dev/null && echo "key: OK"
-age-keygen -y /tmp/keys.txt                   # must equal &sh1m3ji in .sops.yaml
-lsblk -d -o NAME,PATH,SIZE,MODEL,SERIAL,TRAN  # must match the next line
-grep -n 'device =' hosts/sh1m3ji/disko.nix
-# The generated file must describe this Dell, not the previous HP.
-sudo nixos-generate-config --no-filesystems --show-hardware-config \
-  > /tmp/dell-hardware.nix
-test -s /tmp/dell-hardware.nix && cp /tmp/dell-hardware.nix hosts/sh1m3ji/hardware-configuration.nix
-git add hosts/sh1m3ji/hardware-configuration.nix
-git diff --cached -- hosts/sh1m3ji/hardware-configuration.nix
-nix --extra-experimental-features "nix-command flakes" \
-  flake check --no-build --no-update-lock-file
-# Complete the compatibility report's Wi-Fi, sleep and thermal tests now.
-# Disconnect backup/data drives after copying the repo and key into the live session.
-
-# 3. erase, partition, install (save the printed LUKS recovery key off-device)
+# erase, partition, install
 sudo nix --extra-experimental-features "nix-command flakes" \
-  run --no-update-lock-file .#disko -- --mode destroy,format,mount --flake .#sh1m3ji
-findmnt -R /mnt
-swapon --show
+  run .#disko -- --mode destroy,format,mount --flake .#sh1m3ji
 sudo nixos-generate-config --no-filesystems --root /mnt
 cp /mnt/etc/nixos/hardware-configuration.nix hosts/sh1m3ji/
 git add hosts/sh1m3ji/hardware-configuration.nix
 nix --extra-experimental-features "nix-command flakes" \
-  flake check --no-build --no-update-lock-file
+  flake check --no-build
 sudo install -Dm600 /tmp/keys.txt /mnt/persist/var/lib/sops-nix/age/keys.txt
-sudo nixos-install --flake .#sh1m3ji --no-root-passwd --no-update-lock-file
+sudo nixos-install --flake .#sh1m3ji --no-root-passwd
 
-# 4. restore the latest backup (optional; check the dry run, then type RESTORE)
+# restore the latest backup
 sudo nix --extra-experimental-features "nix-command flakes" \
-  run --no-update-lock-file .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
-  --secrets-file "$PWD/secrets/secrets.yaml" --snapshot latest --dry-run
-sudo nix --extra-experimental-features "nix-command flakes" \
-  run --no-update-lock-file .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
+  run .#restore-sh1m3ji -- --target /mnt --age-key /tmp/keys.txt \
   --secrets-file "$PWD/secrets/secrets.yaml" --snapshot latest
 
-# 5. keep the repo and user key, reboot
+# keep the repo and user key, reboot
 sudo cp -a ~/nix-config /mnt/home/rin/nix-config
 sudo install -Dm600 /tmp/keys.txt /mnt/home/rin/.config/sops/age/keys.txt
 sudo nixos-enter --root /mnt -c 'chown -R rin:users /home/rin/nix-config /home/rin/.config'
 sudo reboot
 ```
 
-Pull the USB, unlock LUKS, log in as `rin`; i3 starts automatically on tty1.
-Confirm the signing and SSH identities before treating the reinstall as
-complete:
-
-```sh
-gpg --list-secret-keys 6EEA8F49B00E0EEA3A3164DEA9B7F275D0F64688
-ssh-keygen -lf ~/.ssh/id_ed25519.pub
-```
-
-`restore-sh1m3ji` restores `Documents` through Restic, then decrypts
-`Documents/Backups/sh1m3ji-migration-keys.tar.age` with the supplied age key
-and installs its `.gnupg` and `.ssh` trees. Older restore tooling only restored
-the encrypted container, leaving the live GnuPG keyring empty.
-Then continue with [First boot](#first-boot).
-
-## Layout
-
-```
-flake.nix                        inputs + sysdefs
-flake.lock                       pinned deps
-backup/manifest.nix              what Restic backs up and restores
-checks/                          flake checks (backup manifest sanity)
-pkgs/                            locally maintained package derivations
-hosts/sh1m3ji/
-  default.nix                    system config
-  disko.nix                      disk layout
-  COMPATIBILITY.md               Dell inventory, Linux findings and live tests
-  rollback.nix                   systemd-initrd root replacement
-  hardware-configuration.nix     generated on the actual hardware
-home/rin/
-  default.nix                    Home Manager entrypoint and user identity
-  modules/                       desktop, shell, apps, development, and Nixcord
-  dotfiles/                      the configs, symlinked into ~/.config as-is
-secrets/secrets.yaml             sops-encrypted secrets
-```
-
-The encrypted Btrfs filesystem gets a fresh `/root` subvolume before every boot. 
-State survives through direct sibling-subvolume mounts for `/nix`, `/home`, `/persist`, 
-selected `/var` state, NetworkManager connections, and swap.
-
-On the 256 GB WD SN530, GPT contains a 1 GiB FAT32 EFI partition and a LUKS2
-partition using the remaining space. All Btrfs subvolumes share that space;
-`/home` and `/nix` have no fixed size split. Disk swap reserves 8 GiB inside
-LUKS, and zram uses up to half of RAM. Hibernation is not configured. The EFI
-partition holds the kernels and initrds for up to five boot generations.
-
-The reason why I said `impermanence` was iffy on 26.05 is because at the moment 
-I write this there is still an issue opening for the new boot order, I'm not 
-explaining the details here. When they finally resolve that I may update the 
-flake to use it.
-
-## Installation, explained
-
-The [NixOS manual](https://nixos.org/manual/nixos/stable/) remains the reference
-for the installer; this records the choices specific to this flake. Disks are
-handled by [Disko](https://github.com/nix-community/disko), and the
-systemd-initrd rollback is adapted for LUKS from
-[Clan Core's Btrfs rollback template](https://github.com/clan-lol/clan-core/blob/9c6dbdd763a6fe2d2925300106a3502fa82b580f/templates/disk/btrfs-single-disk-subvolumes-impermanance-rollback/default.nix).
-
-### Before booting the ISO
-
-- The files that matter have been restored from the backup at least once,
-  not merely copied.
-- The repository exists somewhere other than the target disk, including the
-  encrypted `secrets/secrets.yaml` and `.sops.yaml`.
-- The laptop boots the USB in UEFI mode. The config installs systemd-boot.
-- A strong LUKS passphrase has been chosen, distinct from the login password.
-- There is somewhere off-device (e.g. a password manager on another device)
-  for the LUKS recovery key Disko will generate.
-- Ideally the backup drive is disconnected before partitioning.
-
-Only the EFI System Partition is unencrypted. Everything else, including the
-disposable `/`, every persistent subvolume, the swap file, and the boot-time
-SOPS age key, is inside one LUKS2 volume. Secure Boot is not configured, so this
-protects data at rest but does not detect a tampered bootloader.
-
-### Live ISO notes
-
-Don't run the graphical installer; its partitioning and generated config would
-bypass this flake. The ISO is only used for its desktop, network, and terminal.
-The live user is `nixos` and `sudo` needs no password.
-
-If the repo isn't on GitHub, copy it from the backup drive instead of cloning:
-`cp -a /run/media/nixos/<LABEL>/nix ~/nix-config`.
-
-The age key check matters because `/tmp` disappears on reboot and the target
-is about to be wiped. If the key doesn't decrypt, go to [Lost keys](#lost-keys)
-before touching the disk.
-
-The installation and Disko must use the committed `flake.lock`, hence
-`--no-update-lock-file`. Git-backed flakes only see tracked or staged files: if
-Nix says a file doesn't exist while it clearly does, it needs `git add`. It does
-not need to be committed during the live session.
-
-`flake check --no-build` evaluates the configuration; it does not prove that
-every package builds. If time and live-session storage allow, build before
-erasing:
-
-```sh
-nix --extra-experimental-features "nix-command flakes" \
-  build --no-update-lock-file --no-link \
-  .#nixosConfigurations.sh1m3ji.config.system.build.toplevel
-```
-
-This is a large desktop closure; a live session may not have enough space.
-
-### Disko
-
-`--mode destroy,format,mount` is the point of no return. It creates the ESP, the
-LUKS2 volume, and the Btrfs subvolumes, then mounts them below `/mnt`. It asks
-for the LUKS passphrase twice, then enrolls a separate high-entropy recovery
-key, prints it with a QR code, and pauses. Save that key off-device and verify
-it before pressing Enter. It is not the SOPS age key and must never go in Git.
-
-To check the result, `findmnt -R /mnt` and `swapon --show`: every Btrfs mount
-should resolve through `/dev/mapper/crypted`. `/root` (mounted at `/`) is
-discarded on every boot; everything else in `disko.nix` is a sibling subvolume
-mounted directly at its final path. There are no Impermanence bind mounts.
-
-Verify the internal WD SN530 is about 238.5 GiB (`256052966400` bytes), not the
-500 GB JMicron-attached disk. If it is not `/dev/nvme0n1`, edit `device` in
-`hosts/sh1m3ji/disko.nix` before running Disko. A verified whole-disk
-`/dev/disk/by-id/nvme-...` path from the live ISO is also suitable; do not use
-a `-partN` path or guess a Linux ID from the Windows serial. Stage any new
-files and repeat flake evaluation after edits.
-
-### Hardware configuration
-
-`nixos-generate-config --no-filesystems` is intentional: Disko owns all
-filesystem and swap declarations. The quickstart first scans the Dell from
-the ISO so evaluation uses its hardware before partitioning, then refreshes
-the scan against `/mnt` afterward. Inspect the staged diff and repeat
-`flake check` before installation. Do not copy generated filesystem or swap
-declarations into the flake; Disko supplies those.
-
-### Installing
-
-Only the machine private key goes on `/persist`; sops-nix reads it during
-activation. The off-device recovery key must never be copied to the laptop.
-
-The root account stays locked; `rin` is the admin account. The initrd allows an
-emergency shell, but the disk still needs the LUKS passphrase. An interrupted
-`nixos-install` doesn't need another format: fix the cause and rerun it.
-
-### Restoring before the first boot
-
-The restore app runs entirely from the flake and restores absolute snapshot
-paths below `/mnt` (so `/home/rin/...` becomes `/mnt/home/rin/...`). It refuses
-to continue unless `/mnt/home` is a distinct mount, the credentials decrypt and
-authenticate, and exactly one `sh1m3ji` snapshot matches. It never deletes
-files that are absent from the snapshot. Type `RESTORE` only after comparing the
-snapshot ID, timestamp, target, and dry-run output. Don't launch Zen from the
-live ISO; its restored profile must stay closed until Home Manager has run.
-
-Without a clone, from just the recovery key and the pushed repo:
-
-```sh
-install -m600 /run/media/nixos/<RECOVERY_LABEL>/sh1m3ji-age-recovery.txt \
-  /tmp/sh1m3ji-recovery-age-key.txt
-sudo nix --extra-experimental-features "nix-command flakes" \
-  run github:buttermiilk/nixos#restore-sh1m3ji -- \
-  --target /mnt --age-key /tmp/sh1m3ji-recovery-age-key.txt \
-  --snapshot latest --dry-run
-# then the same without --dry-run
-```
-
-Pin `github:buttermiilk/nixos/<COMMIT_SHA>` for a specifically tested revision.
-
-### Before rebooting
-
-The live ISO's home disappears on reboot, so the exact repo used for the
-install, including the new hardware file, is copied into `/home/rin`. The user
-copy of the age key lets `rin` edit secrets. The `chown` covers all of
-`.config`, because `sudo install -D` creates missing parents as root and Home
-Manager writes there as `rin`.
-
-## Lost keys
-
-### Only the recovery age key survives
-
-Don't install the recovery key as the machine key. Use it to authorize a new
-machine recipient while the old ciphertext is still decryptable:
-
-```sh
-umask 077
-install -m600 /run/media/nixos/<RECOVERY_LABEL>/sh1m3ji-age-recovery.txt \
-  /tmp/recovery-keys.txt
-age-keygen -o /tmp/keys.txt
-age-keygen -y /tmp/keys.txt
-```
-
-Replace only the `&sh1m3ji` recipient in `.sops.yaml` with the printed
-`age1...`, keep the recovery recipient, then rewrap and verify both:
-
-```sh
-SOPS_AGE_KEY_FILE=/tmp/recovery-keys.txt sops updatekeys secrets/secrets.yaml
-SOPS_AGE_KEY_FILE=/tmp/keys.txt sops decrypt secrets/secrets.yaml >/dev/null
-SOPS_AGE_KEY_FILE=/tmp/recovery-keys.txt sops decrypt secrets/secrets.yaml >/dev/null
-```
-
-Copy `/tmp/keys.txt` to the off-device machine-key backup, commit and push the
-rewrapped files if possible, and continue the install.
-
-### Neither age key survives
-
-The SOPS ciphertext can't be rewrapped, and the Restic snapshots are lost unless
-the Restic password was backed up separately. This creates a new credential set;
-revoke anything that may be lost or compromised rather than copying it forward.
-
-Generate a machine key and a recovery key that stays off the laptop:
-
-```sh
-umask 077
-install -d -m700 /tmp/sops-rekey
-age-keygen -o /tmp/sops-rekey/sh1m3ji.txt
-age-keygen -o /tmp/sops-rekey/recovery.txt
-age-keygen -y /tmp/sops-rekey/sh1m3ji.txt
-age-keygen -y /tmp/sops-rekey/recovery.txt
-```
-
-Put both recipients in one key group in `.sops.yaml`:
-
-```yaml
-keys:
-  - &sh1m3ji age1HOST_RECIPIENT_HERE
-  - &recovery age1RECOVERY_RECIPIENT_HERE
-creation_rules:
-  - path_regex: secrets[/\\].*\.yaml$
-    key_groups:
-      - age:
-          - *sh1m3ji
-          - *recovery
-```
-
-Move the dead ciphertext aside and create a new file (`mkpasswd` comes from
-`nix shell nixpkgs#mkpasswd`):
-
-```sh
-mv secrets/secrets.yaml /tmp/sops-rekey/secrets.yaml.lost-key
-mkpasswd -m yescrypt
-sops secrets/secrets.yaml
-```
-
-```yaml
-rin:
-  password: "$y$..."
-  github-pat: "REPLACE_WITH_GITHUB_PAT"
-  modelapi-key: "REPLACE_WITH_MODELAPI_KEY"
-  anymodel-key: "REPLACE_WITH_ANYMODEL_KEY"
-  google-drive-client-id: "REPLACE_WITH_DESKTOP_OAUTH_CLIENT_ID"
-  google-drive-client-secret: "REPLACE_WITH_DESKTOP_OAUTH_CLIENT_SECRET"
-  google-drive-token: "AUTHORIZATION_REQUIRED"
-  access-key-id: "REPLACE_WITH_R2_ACCESS_KEY_ID"
-  secret-access-key: "REPLACE_WITH_R2_SECRET_ACCESS_KEY"
-  endpoint: "https://REPLACE_WITH_ACCOUNT_ID.r2.cloudflarestorage.com"
-  bucket: "REPLACE_WITH_R2_BUCKET"
-  restic-password: "REPLACE_WITH_A_NEW_RANDOM_RESTIC_PASSWORD"
-  ssh:
-    company: |
-      -----BEGIN OPENSSH PRIVATE KEY-----
-      REPLACE_WITH_PRIVATE_KEY_BODY
-      -----END OPENSSH PRIVATE KEY-----
-```
-
-Install the matching public SSH key on the company server, and give the GitHub
-token only the scopes it needs. `AUTHORIZATION_REQUIRED` keeps the backup
-coordinator gated until Google is authorized. A new Restic password starts a
-new repository.
-
-Verify both keys, then save them to two independent off-device locations:
-
-```sh
-SOPS_AGE_KEY_FILE=/tmp/sops-rekey/sh1m3ji.txt sops decrypt secrets/secrets.yaml >/dev/null
-SOPS_AGE_KEY_FILE=/tmp/sops-rekey/recovery.txt sops decrypt secrets/secrets.yaml >/dev/null
-install -m600 /tmp/sops-rekey/sh1m3ji.txt /tmp/keys.txt
-install -m600 /tmp/sops-rekey/sh1m3ji.txt /run/media/nixos/<HOST_LABEL>/sh1m3ji-age-key.txt
-install -m600 /tmp/sops-rekey/recovery.txt /run/media/nixos/<RECOVERY_LABEL>/sh1m3ji-age-recovery.txt
-sync
-```
-
-Eject the backup drive before continuing with Disko.
+The block above assumes you know for sure what's supposed to happen.
 
 ## First boot
-
-There's no display manager. Logging in on tty1 runs `startx`, which starts i3;
-exiting i3 returns to the TTY. Don't add `~/.xinitrc` unless replacing the
-generated session script.
-
-Commit what the install produced:
-
+Commit what the install produced first.
 ```sh
 cd ~/nix-config
 git add flake.lock hosts/sh1m3ji/hardware-configuration.nix .sops.yaml secrets/secrets.yaml
@@ -406,76 +68,31 @@ git commit -m "Record installed hardware"
 git push
 ```
 
-### Drive backups
-
-Google OAuth needs one browser step. Create a personal desktop OAuth client
-following the [rclone Drive guide](https://rclone.org/drive/#making-your-own-client-id),
-store its ID and secret under `rin` in `secrets/secrets.yaml`, and publish the
-app (testing mode expires refresh tokens after seven days). Then:
-
+Google OAuth needs one browser step in case you have no existing backup or not restoring from any. Follow the [rclone Drive guide](https://rclone.org/drive/#making-your-own-client-id), then store the ID and secret in the secrets file, after which do:
 ```sh
 nix run .#authorize-google-drive
 git diff -- secrets/secrets.yaml
 ```
 
-The tool writes the token back through SOPS without printing any credential.
-If `backup/manifest.nix` has `enable = false`, set it to `true`, rebuild, and
-create or refresh the inner key archive. The helper streams SSH, GnuPG, selected SOPS secrets, and CLI credentials directly into an archive encrypted to both age recipients in `.sops.yaml`; it does not write a plaintext staging archive:
-
-```sh
-bash home/rin/dotfiles/scripts/create-migration-key-archive.sh
-age --decrypt --identity "$HOME/.config/sops/age/keys.txt" \
-  "$HOME/Documents/Backups/sh1m3ji-migration-keys.tar.age" \
-  | tar --list --file=-
-```
-
-The validation command prints filenames only. Refresh this archive when a key or included login changes. It sits below `Documents`, so the normal encrypted Restic job carries the ciphertext. Rebuild and take a first snapshot:
-
+To take a snapshot manually:
 ```sh
 sudo nixos-rebuild switch --flake .#sh1m3ji
 systemctl --user start restic-backups-gdrive.service
 journalctl --user -u restic-backups-gdrive.service
 ```
 
-Once that succeeds, *Backup and reboot* in the power menu is the normal
-protected reboot. Plain *Reboot* stays available without a backup.
-
-### Apps
-
-Stuff I usually use are declared in the flake. The rest:
-
-I play Roblox, on Linux the only practical way to play is Sober, and it's only 
-distributed through Flatpak. I'll have to figure out a more elegant solution, 
-but for now, install it for only a user, not system-wide, so its files live 
-under the persistent `/home` subvolume:
-
-```sh
-flatpak remote-add --user --if-not-exists flathub \
-  https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user flathub org.vinegarhq.Sober
-```
-
-I use `warp-cli` since it's rather neat, use it if you want (append a team name
-to `registration new` for a Cloudflare One org). The enrollment survives in the
-directly mounted `/var/lib/cloudflare-warp` subvolume.
-
+## Apps
+#### `warp-cli`
+I use `warp-cli` since it's a rather neat tool.
 ```sh
 warp-cli registration new
 warp-cli connect
 ```
 
-Fly.io only needs its normal interactive login: `fly auth login`.
+#### osu!stable
+I play osu! and the `osu-winello` project doesn't support NixOS out of the box, so we have to be a little more creative here.
 
-#### osu! stable through osu-winello
-
-I play osu! and the `osu-winello` project doesn't support NixOS out of the box, 
-so we have to be a little more creative here.
-
-The flake installs Winello's NixOS-side dependencies and an `osu-winello` 
-launcher that runs the upstream client inside Steam's FHS environment. Winello 
-itself manages a mutable Wine prefix and osu! installation, so install it after 
-the first boot rather than putting it in the Nix store:
-
+The flake installs Winello's NixOS-side dependencies and an `osu-winello` launcher that runs the upstream client inside Steam's FHS environment. Winello itself manages a mutable Wine prefix and osu! installation, so install it after the first boot.
 ```sh
 git clone https://github.com/NelloKudo/osu-winello.git ~/osu-winello
 cd ~/osu-winello
@@ -483,100 +100,42 @@ chmod +x osu-winello.sh
 steam-run ./osu-winello.sh
 ```
 
-Choose **Custom path** in the installer and point it at `/home/rin/Documents/osu` when restoring an existing installation. The flake provides a declarative **osu! stable** menu entry that runs `osu-winello`, so remove Winello's duplicate launcher after installation. Keep its two hidden handler entries for `.osz`, `.osk`, and `osu://` links:
-
+Choose **Custom path** in the installer and point it at `/home/rin/Documents/osu` when restoring an existing installation. The flake has a declarative **osu! stable** menu entry that runs `osu-winello`, so remove Winello's duplicate launcher after installation. Keep its two hidden handler entries for `.osz`, `.osk`, and `osu://` links:
 ```sh
 rm -f ~/.local/share/applications/osu-wine.desktop
 update-desktop-database ~/.local/share/applications
 ```
 
-The game can also be started from a terminal with `osu-winello`. The osu! files and songs live under the backed-up `Documents` tree. Winello's reconstructible Wine runtime, prefix, handlers, and `osu-wine` launcher live below `~/.local/share` and `~/.local/bin`; rerun the installer after a full reinstall.
+The launcher also runs the game under `gamemoderun` (performance CPU governor) and without fcitx5's XIM, which otherwise delays or drops key presses in Wine.
 
-The launcher also runs the game under `gamemoderun` (performance CPU governor)
-and without fcitx5's XIM, which otherwise delays or drops key presses in Wine.
-picom unredirects fullscreen windows so the game isn't composited. If it still
-stutters, drop the keyboard's polling rate to 1000 Hz and pause Monitask.
-
-I strongly suggest having your osu! installation on a different disk, and you 
-point the installation to it so it uses your stuff. That also minimizes the stateful 
-stuff on your NixOS disk.
-
-#### Monitask
-
-Work requires it. It's packaged from the official `.deb` in
-`pkgs/monitask.nix` and is X11-only (fine under i3). Its built-in updater can't
-work on NixOS; bump `version` and `hash` from the
-[APT index](https://deskcap.blob.core.windows.net/deployment/Linux/deb/Release/dists/bionic/main/binary-amd64/Packages)
-instead. Old `.deb`s may vanish upstream, which breaks the build until bumped.
-
-#### OBS
-
-The profile (QuickSync encoders, 1080p60 canvas and recordings, 720p60
-stream, 48 kHz audio, dynamic bitrate) lives in `home/rin/modules/obs.nix` and
-is copied over on every rebuild, so change it there rather than in Settings.
-Rebuild with OBS closed, or it writes its old settings back on exit. The stream
-key and scene collections are not declared: paste the key into OBS once; both
-live under `~/.config/obs-studio/basic`, which the backup covers.
+I strongly suggest having your osu! installation on a different disk, and you point the installation to it so it uses your stuff. That also minimizes stateful stuff on your NixOS disk.
 
 #### Eco mode
+`$mod+b` (or `eco-mode toggle`) switches TLP to its power-saver profile (no turbo, EPP `power`, low-power platform profile), stops picom, and caps brightness at 40%.
 
-`$mod+b` (or `eco-mode toggle`) switches TLP to its power-saver profile (no
-turbo, EPP `power`, low-power platform profile), stops picom, and caps
-brightness at 40%. Polybar shows `eco` while it's on; click it or press `$mod+b`
-again to restore all three. It resets on reboot. The Dell has a separate 30 W
-ceiling for sustained and boost CPU package power (including the iGPU), applied
-in every profile. Thermald can reduce it further as needed for cooling.
-
-#### PhotoCraft and EffectCraft
-
-[PhotoCraft](https://github.com/storytold/photocraft) (Photoshop) and
-[EffectCraft](https://github.com/storytold/effectcraft) (After Effects) are
-from the open-source ArtCraft suite. They are young and release often; to
-update, take the new version from the GitHub releases and the AppImage's
-checksum from that release's `SHA256SUMS.txt`, then update `version` and
-`hash` in `pkgs/photocraft.nix` or `pkgs/effectcraft.nix`.
-
-### Check the rollback
-
-```sh
-sudo touch /rollback-probe
-sudo reboot
-```
-
-After logging back in, `/rollback-probe` must be gone while Wi-Fi, WARP,
-Bluetooth pairings, logs, and `/home` remain.
+My lappy has a separate 30 W ceiling configured for sustained and boost CPU package power (including the iGPU). Thermald can reduce it further as needed for cooling.
 
 ## Secrets (sops-nix)
-
-Everything in `secrets/secrets.yaml` is age-encrypted so the repo can be public. 
-The machine decrypts at boot with
-`/persist/var/lib/sops-nix/age/keys.txt`; your editing copy of the same key sits 
-at `~/.config/sops/age/keys.txt`
-
+Everything in `secrets/secrets.yaml` is age-encrypted so the repo can be public. The machine decrypts at boot with `/persist/var/lib/sops-nix/age/keys.txt`.
 ```sh
-sops secrets/secrets.yaml          # edit secrets in $EDITOR, re-encrypts on save
+sops secrets/secrets.yaml
 ```
 
 To add a secret, add the value there, declare it in
-`hosts/sh1m3ji/default.nix` under `sops.secrets`, rebuild. Plaintext shows up under `/run/secrets/` with the owner/permissions you declared. Point whatever needs it at that path; the plaintext never touches the repo or the nix store.
+`hosts/sh1m3ji/default.nix` under `sops.secrets` then rebuild. Plaintext shows up under `/run/secrets/` with the owner/permissions you declared.
 
-The password is declarative (`users.mutableUsers = false`, so `passwd` won't
-stick). Rotate it with `nix shell nixpkgs#mkpasswd -c mkpasswd -m yescrypt`,
-paste the hash over `rin/password` via `sops secrets/secrets.yaml`, and rebuild.
+To rotate the user password, `nix shell nixpkgs#mkpasswd -c mkpasswd -m yescrypt`, replace the hash in `sops secrets/secrets.yaml` then rebuild.
 
 ### Replace the machine key
-
 The recovery key makes machine-key loss recoverable:
-
 ```sh
 nix shell nixpkgs#age nixpkgs#sops
 umask 077
-age-keygen -o /tmp/sh1m3ji-new-age-key.txt
-age-keygen -y /tmp/sh1m3ji-new-age-key.txt
+age-keygen -o /tmp/new-age-key.txt
+age-keygen -y /tmp/new-age-key.txt
 ```
 
-Replace only `&sh1m3ji` in `.sops.yaml`, then rewrap with the recovery key,
-verify both, install, and rebuild:
+Replace only `&sh1m3ji` in `.sops.yaml`, then rewrap with the recovery key, verify both, install and rebuild:
 
 ```sh
 SOPS_AGE_KEY_FILE=/path/to/sh1m3ji-age-recovery.txt sops updatekeys secrets/secrets.yaml
@@ -587,79 +146,82 @@ install -Dm600 /tmp/sh1m3ji-new-age-key.txt "$HOME/.config/sops/age/keys.txt"
 sudo nixos-rebuild switch --flake .#sh1m3ji
 ```
 
-Back the new key up off-device. If a key may have been stolen rather than lost,
-also run `sops rotate --in-place secrets/secrets.yaml` with the recovery key.
-If the missing key blocks login, do this from the ISO after a Disko `mount`
-(see below), prefixing the persistent paths with `/mnt`.
+Back the new key up off-device. If a key may have been stolen rather than lost, also run `sops rotate --in-place secrets/secrets.yaml` with the recovery key.
 
 ## Day-to-day
-
 ```sh
-sudo nixos-rebuild switch --flake .#sh1m3ji   # apply config changes
-nix flake update && sudo nixos-rebuild switch --flake .#sh1m3ji   # upgrade
-flatpak update --user                          # Sober
+sudo nixos-rebuild switch --flake .#sh1m3ji
+nix flake update && sudo nixos-rebuild switch --flake .#sh1m3ji
+flatpak update --user
 ```
 
-`nixos-rebuild build` builds without activating; `test` activates until the
-next reboot without changing the boot default. Commit `flake.lock` only after
-the new generation has been tested.
-
-Where things go:
-
+**For models:** here is where things should go.
 - Apps, shell, and Home Manager settings: `home/rin/modules/`
 - Services, hardware, users, locale, X: `hosts/sh1m3ji/default.nix`
 - Root replacement and old-root retention: `hosts/sh1m3ji/rollback.nix`
 - Disk layout (reinstall or migration only): `hosts/sh1m3ji/disko.nix`
 - Secrets: `secrets/secrets.yaml`, only through `sops`
 
-Declare packages in Nix rather than `nix profile install`, otherwise the repo
-stops describing the machine.
+## Boot-time cache cleanup
 
-If a change breaks things, run `sudo nixos-rebuild switch --rollback`, or hold
-Space at boot and pick the previous generation. That's separate from the
-fresh root: the root rollback discards mutable state on `/`, it doesn't choose
-an older system.
+Before mounting the fresh root, the rollback service clears all contents of
+`/var/cache` and `/root/.cache` in the outgoing root, plus these cache locations
+for each user under `/home`:
 
-Mutable files on `/` disappear at the next boot. Persistent service state must have an explicit direct subvolume in `disko.nix`; `rollback.nix` retains old roots for 30 days as a recovery window, not as a backup policy.
+- `.cache` (the standard XDG cache, including browser and thumbnail caches)
+- `.var/app/*/cache` (Flatpak caches)
+- `.npm/_cacache`, `.bun/install/cache`, `.local/share/pnpm/store`
+- `.cargo/registry/cache`, `.cargo/registry/src`, `.cargo/git/db`, `.cargo/git/checkouts`
+- `Documents/osu-lazer/cache`
 
-The store is garbage-collected weekly (generations older than 14 days) and
-optimised automatically.
+Applications recreate caches as needed; this can mean downloads on the next
+launch or build. Cleanup does not follow symlinks or cross nested filesystem
+boundaries. Application-specific caches outside these paths are not discovered
+by scanning arbitrary directories named `cache`; add their paths explicitly.
+Project build outputs and installed packages remain persistent.
 
-Health checks:
+Archived roots are pruned at boot when older than **72 hours (3 days)**, with
+minute precision. Archives created by earlier configurations are pruned by the
+same rule. Persistent sibling subvolumes are not part of these root archives.
 
-```sh
-systemctl --failed
-journalctl -b -p warning
-lsblk -f && swapon --show        # data and swap behind /dev/mapper/crypted
-findmnt -R / | grep crypted      # every persistent subvolume mounted directly
-cat /proc/cmdline                # systemd.machine_id=firmware
-```
 
-## Recovery from the ISO
+### Preserved application downloads
 
-Keep the installer USB; it's also the recovery environment. Boot it in UEFI
-mode, get the repo, check the disk with `lsblk`, then mount without formatting:
+Monitask 0.01.86 (`monitask.deb`) and Taiko Editor 4.1.4 (`taikoeditor.rar`)
+are fetched from `https://nixos.mewo.eu.org/` with pinned SHA-256 hashes. Replace
+an object only alongside the corresponding package hash/version update.
+Taiko Editor extracts only the JAR and updater and uses Nix's Java runtime.
 
-```sh
-sudo nix --extra-experimental-features "nix-command flakes" \
-  run .#disko -- --mode mount --flake .#sh1m3ji
-```
+The mirror's `bongocat.zip` contains the Windows `bongo.exe`, configuration and
+images, not a native Linux build or source tree. The Linux Bongo Cat package
+therefore continues to compile the pinned upstream source. To mirror that fetch
+too, upload the source archive for commit
+`0714582791529af714bc9a6a6a6f77497c7c561d`.
 
-It accepts either the LUKS passphrase or the recovery key. Make sure
-`/mnt/persist/var/lib/sops-nix/age/keys.txt` exists, repair the config (or take
-the repo from `/mnt/home/rin`), and reinstall without repartitioning:
 
-```sh
-sudo nixos-install --flake .#sh1m3ji --no-root-passwd
-```
+### Archive the native Bongo Cat build
 
-Never use Disko's `destroy` or `format` modes for recovery unless erasing the
-machine is intentional.
-
-Old roots are kept for 30 days. To inspect them:
+On x86-64 Linux with Nix, run from the flake directory:
 
 ```sh
-sudo mkdir -p /mnt/btrfs-top
-sudo mount -t btrfs -o subvolid=5 /dev/mapper/crypted /mnt/btrfs-top
-sudo btrfs subvolume list /mnt/btrfs-top/root.old.d
+bash home/rin/dotfiles/scripts/archive-bongocat.sh
 ```
+
+This builds Bongo Cat and creates `bongocat-nix-cache.tar.gz`, containing a local
+Nix binary cache of the package and all runtime dependencies, plus its store
+path. The command prints the archive SHA-256. Upload the archive to R2; retain
+that checksum separately. This is a Nix cache export, not a portable Linux ZIP.
+
+To restore your verified archive on another Nix machine:
+
+```sh
+mkdir bongocat-cache
+tar -xzf bongocat-nix-cache.tar.gz -C bongocat-cache
+nix copy --no-check-sigs --from "file://$PWD/bongocat-cache/cache" \
+  "$(cat bongocat-cache/store-path.txt)"
+"$(cat bongocat-cache/store-path.txt)/bin/bongocat-osu"
+```
+
+`--no-check-sigs` is for this manually verified, unsigned cache. It does not
+change the machine's global signature policy. This restores the archived build;
+it does not configure R2 as an automatic substituter for future rebuilds.

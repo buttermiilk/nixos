@@ -24,12 +24,9 @@ in
     pinentry.package = pkgs.pinentry-qt;
   };
 
-  # Oh My Zsh comes from nixpkgs; Nix updates it with the rest of the system.
   programs.zsh = {
     enable = true;
     profileExtra = ''
-      # Start the graphical session after logging in on the primary TTY. This
-      # runs before .zshrc, so Zellij starts inside Kitty rather than around X11.
       if [[ -z "$DISPLAY" && "''${XDG_VTNR:-0}" == 1 ]]; then
         exec startx
       fi
@@ -53,7 +50,7 @@ in
     };
     oh-my-zsh = {
       enable = true;
-      theme = ""; # Powerlevel10k is loaded through programs.zsh.plugins.
+      theme = "";
       plugins = [
         "git"
         "sudo"
@@ -67,15 +64,14 @@ in
       '';
     };
     initContent = lib.mkMerge [
-      # Attach to (or create) the Zellij session and close the shell with it.
-      # See programs.zellij below for why this replaces the stock integration.
+
       (lib.mkOrder 200 ''
         if [[ -z "$ZELLIJ" && -t 0 && -t 1 ]]; then
           zellij attach -c
           exit
         fi
       '')
-      # Load the packaged preset before the theme, which is sourced at order 900.
+
       (lib.mkOrder 890 ''
         if [[ -r "$HOME/.p10k.zsh" ]]; then
           source "$HOME/.p10k.zsh"
@@ -96,18 +92,16 @@ in
     enable = true;
 
     ignores = [
-      # Editor and OS artifacts
+
       "*~"
       "*.swp"
       "*.swo"
       ".DS_Store"
 
-      # Nix and direnv artifacts
       ".direnv/"
       "result"
       "result-*"
 
-      # Local model-assisted context
       "AGENTS.md"
       ".agents/"
       "CLAUDE.md"
@@ -149,10 +143,6 @@ in
     };
   };
 
-  # The stock zsh integration also starts Zellij in shells without a terminal,
-  # such as the one Zed runs to read the login environment: Zellij exits at
-  # once, the shell exits with it, and Zed ends up with no PATH. The autostart
-  # in programs.zsh.initContent below only runs on a real terminal.
   programs.zellij = {
     enable = true;
     enableZshIntegration = false;

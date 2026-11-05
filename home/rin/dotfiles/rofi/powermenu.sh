@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Bound to $mod+p in the i3 config. The old dots referenced this file
-# but never shipped it — minimal stand-in, restyle at will.
 
 chosen=$(printf 'Lock\nLogout\nSuspend\nBackup and reboot\nReboot\nShutdown' | rofi -dmenu -p 'power')
 

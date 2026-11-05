@@ -5,9 +5,7 @@
 }:
 
 let
-  # Nixcord still applies Vencord and the selected Chromium flags around this
-  # base package. Removing TTS here keeps Discord from pulling in and starting
-  # speech-dispatcher without affecting voice calls.
+
   leanDiscord = pkgs.callPackage "${inputs.nixcord}/pkgs/discord" {
     withTTS = false;
   };
@@ -23,8 +21,6 @@ in
       vencord.enable = true;
       openASAR.enable = false;
 
-      # Drop Chromium background services that Discord's chat/voice/video paths
-      # do not require. GPU acceleration and WebRTC remain enabled.
       commandLineArgs = [
         "--disable-background-networking"
         "--disable-breakpad"
@@ -42,9 +38,7 @@ in
       autoUpdateNotification = false;
 
       plugins = {
-        # Vencord's required NoTrack plugin already disables Discord analytics,
-        # metrics, and Sentry. Keep only small plugins that support the three
-        # required workflows or actively reduce background/UI noise.
+
         clearUrls.enable = true;
         consoleJanitor = {
           enable = true;

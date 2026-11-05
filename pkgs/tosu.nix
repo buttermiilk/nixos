@@ -18,10 +18,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  # tosu is a `pkg` executable that reads its JS payload from its own file, so
-  # patchelf corrupts it. Run it unmodified through the host's nix-ld shim
-  # (programs.nix-ld) instead, pointing nix-ld at the libraries it needs.
-  # The bundled .NET beatmap parser dlopen()s ICU.
   installPhase = ''
     runHook preInstall
 

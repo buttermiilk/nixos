@@ -21,14 +21,13 @@ in
     cargo
     rustc
     python3
-    nodejs_24 # Includes npm
+    nodejs_24
     pnpm
     bun
     flyctl
     gh
     inputs.claude-code-nix.packages.${pkgs.stdenv.hostPlatform.system}.default
 
-    # pdf tools
     poppler-utils
     python3Packages.pymupdf
     qpdf
@@ -36,32 +35,24 @@ in
 
     neovim
 
-    # X11 automation (click, type, move/resize windows) for driving GUI apps
-    # from scripts and agents.
     xdotool
 
-    # Antigravity CLI from the flake input
     inputs.antigravity.packages.${pkgs.stdenv.hostPlatform.system}.google-antigravity-cli
 
-    # Language servers for Zed, one per toolchain above. They go on the
-    # normal PATH, not programs.zed-editor.extraPackages: Zed looks servers
-    # up in the project's login-shell environment, which never sees that
-    # wrapper's PATH. The servers Zed downloads itself are generic Linux
-    # binaries that NixOS can't run reliably.
     nixd
     nixfmt
     rust-analyzer
     basedpyright
     ruff
-    # Node: TS/JS, Astro, Tailwind, and HTML/CSS/JSON/ESLint
+
     vtsls
     astro-language-server
     tailwindcss-language-server
     vscode-langservers-extracted
-    # Shell scripts in dotfiles/scripts
+
     bash-language-server
     shellcheck
-    # TOML (Cargo, wrangler)
+
     taplo
   ];
 
@@ -109,9 +100,6 @@ in
         "gpt-6-astra" = 4;
       };
 
-      # provider with sort of a nice token pricing,
-      # in case the sub runs out.
-      # not used frequently.
       model_providers.modelapi = {
         name = "ModelAPI";
         base_url = "https://modelapi.vn/v1";
@@ -159,18 +147,16 @@ in
       "editor.formatOnSave" = true;
       "markdown-preview-enhanced.previewTheme" = "github-dark.css";
       "editor.fontFamily" = "'FantasqueSansM Nerd Font', monospace";
-      # Fantasque Sans Mono's ligatures are contextual alternates (calt).
+
       "editor.fontLigatures" = "'calt'";
       "git.autofetch" = true;
       "security.workspace.trust.untrustedFiles" = "open";
     };
   };
 
-  # Native GPU renderer instead of Chromium's; mirrors the VSCodium setup above.
   programs.zed-editor = {
     enable = true;
 
-    # Same coverage as VSCodium's nix-ide and Astro extensions.
     extensions = [
       "nix"
       "astro"
@@ -179,7 +165,7 @@ in
     ];
     userSettings = {
       base_keymap = "VSCode";
-      # Nix owns updates; Zed can't replace itself in the store anyway.
+
       auto_update = false;
       telemetry = {
         diagnostics = false;
@@ -190,7 +176,7 @@ in
 
       buffer_font_family = "FantasqueSansM Nerd Font";
       buffer_font_size = 17;
-      # Fantasque Sans Mono's ligatures are contextual alternates (calt).
+
       buffer_font_features.calt = true;
       ui_font_family = "Adwaita Sans";
       ui_font_size = 16;
@@ -212,8 +198,7 @@ in
       ];
       lsp.nixd.settings =
         let
-          # Completion and docs come from this flake's own nixpkgs, NixOS and
-          # Home Manager options rather than whatever <nixpkgs> resolves to.
+
           flake = ''(builtins.getFlake "${config.home.homeDirectory}/nixConfig")'';
           host = "${flake}.nixosConfigurations.${osConfig.networking.hostName}";
         in

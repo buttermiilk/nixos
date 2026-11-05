@@ -4,26 +4,22 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
-    # per-machine quirks maintained by the community (Intel laptop profiles)
     nixos-hardware = {
       url = "github:NixOS/nixos-hardware";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # antigravity for testing, maintained by the community
     antigravity = {
       url = "github:jacopone/antigravity-nix";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "codex-nix/flake-utils";
     };
 
-    # Blender Lab's official MCP server and Blender extension.
     blender-mcp = {
       url = "git+https://projects.blender.org/lab/blender_mcp.git?ref=refs/tags/v1.0.0";
       flake = false;
     };
 
-    # declarative disk partitioning — the btrfs layout lives in hosts/sh1m3ji/disko.nix
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -34,22 +30,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # secrets encrypted in-repo, decrypted at boot with a root-owned age key
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Firefox-based browser with a Home Manager module for declarative profiles,
-    # policies, extensions, spaces, pins, and other Zen-specific state.
     zen-browser = {
-      # Follow stable/beta releases instead of the nightly Twilight channel.
+
       url = "github:0xc000022070/zen-browser-flake/beta";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
 
-    # codex cli isn't in nixpkgs
     codex-nix = {
       url = "github:sadjow/codex-cli-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -61,36 +53,19 @@
       inputs.systems.follows = "codex-nix/flake-utils/systems";
     };
 
-    # nixcord
-    # basically just discord with vencord that's declarative
     nixcord = {
       url = "github:4evy/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";
-      # Otherwise nixcord locks its own second copies of these.
+
       inputs.nixpkgs-packages.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
 
-    # Discord TUI client with voice and screen sharing; not in nixpkgs 26.05.
-    concord = {
-      url = "github:chojs23/concord/v2.6.1";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "codex-nix/flake-utils";
-    };
-
-    # ArtCraft apps (PhotoCraft, EffectCraft, ...), unofficial. Built from
-    # storytold's release AppImages, pinned to their published hashes and
-    # mirrored, so builds survive upstream deleting a release.
     artcraft = {
       url = "github:ipeglin/artcraft-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Native Spotify client (Rust/egui); playback needs Spotify Premium.
-    spotifast = {
-      url = "github:crmne/spotifast/v0.12.0";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -116,6 +91,7 @@
         blender-with-mcp = final.callPackage ./pkgs/blender-with-mcp.nix {
           blenderMcpExtension = final.blender-mcp-extension;
         };
+        concord = final.callPackage ./pkgs/concord.nix { };
         bongocat-osu = final.callPackage ./pkgs/bongocat-osu.nix { };
         taiko-editor = final.callPackage ./pkgs/taiko-editor.nix { };
         material-icon-font = final.callPackage ./pkgs/material-icon-font.nix { };
@@ -145,7 +121,7 @@
 
       sh1m3ji = nixpkgs.lib.nixosSystem {
         inherit system;
-        # Make flake-provided packages visible to Home Manager modules.
+
         specialArgs = { inherit inputs; };
         modules = [
           nixos-hardware.nixosModules.common-cpu-intel
@@ -156,8 +132,6 @@
           sops-nix.nixosModules.sops
           inputs.artcraft.nixosModules.default
 
-          # Apply the custom-packages overlay to the NixOS module system so
-          # that host and Home Manager modules can use pkgs.bongocat-osu, etc.
           { nixpkgs.overlays = [ overlay ]; }
 
           home-manager.nixosModules.home-manager
@@ -179,7 +153,7 @@
       overlays.default = overlay;
 
       packages.${system} = {
-        # Use the exact Disko version pinned in flake.lock during installation.
+
         disko = disko.packages.${system}.disko;
         authorize-google-drive = authorizeGoogleDrive;
         inherit (pkgs)
@@ -187,6 +161,7 @@
           blender-mcp-extension
           blender-with-mcp
           bongocat-osu
+          concord
           material-icon-font
           monitask
           neuro-cursor
@@ -209,8 +184,6 @@
         };
       };
 
-      # Native GUI + Rust dev shell (winit/eframe, audio):
-      #   nix develop ~/nixConfig#rust-gui
       devShells.${system}.rust-gui =
         let
           runtimeLibs = with pkgs; [
@@ -229,10 +202,7 @@
         pkgs.mkShell {
           packages = [ pkgs.pkg-config ];
           buildInputs = runtimeLibs;
-          # winit, glutin and cpal dlopen these at runtime. Binaries built by
-          # Nix's rustc use the store's loader, so programs.nix-ld (which only
-          # serves foreign binaries) never sees them. /run/opengl-driver/lib
-          # is where NixOS exposes the Mesa EGL/GL drivers.
+
           LD_LIBRARY_PATH = "/run/opengl-driver/lib:${pkgs.lib.makeLibraryPath runtimeLibs}";
         };
 

@@ -2,8 +2,6 @@
 
 let
 
-  # PipeWire exposes a PulseAudio-compatible server. Enable that module and i3
-  # integration in the otherwise-minimal nixpkgs Polybar build.
   materialPolybar = pkgs.polybar.override {
     pulseSupport = true;
     i3Support = true;
@@ -13,7 +11,6 @@ let
     name = "start-polybar";
     runtimeInputs = [ materialPolybar ];
     text = ''
-      # ACPI supply names vary between the HP and Dell firmware.
       export POLYBAR_BATTERY=BAT0 POLYBAR_ADAPTER=AC
       for supply in /sys/class/power_supply/*; do
         [[ -r "$supply/type" ]] || continue
@@ -50,7 +47,7 @@ let
       i3
       libnotify
       procps
-      materialPolybar # polybar-msg
+      materialPolybar
     ];
     text = lib.removePrefix "#!/usr/bin/env bash
 " (builtins.readFile ../dotfiles/scripts/eco-mode.sh);
@@ -58,7 +55,7 @@ let
 in
 {
   home.packages = with pkgs; [
-    # Launched from the i3 and Polybar configuration.
+
     picom
     feh
     autotiling
@@ -66,9 +63,9 @@ in
     materialPolybar
     startPolybar
     flameshot
-    libnotify # notify-send, used by the i3 split-orientation binds
+    libnotify
     brightnessctl
-    pulseaudio # pactl CLI only (volume/mic binds); the actual server is PipeWire
+    pulseaudio
     i3lock
     pavucontrol
     xclip
@@ -82,13 +79,11 @@ in
   services.redshift = {
     enable = true;
     provider = "manual";
-    # Bangkok city centre; fixed coordinates avoid depending on GeoClue.
+
     latitude = 13.7563;
     longitude = 100.5018;
   };
 
-  # Dotfiles are symlinked into ~/.config without translating their native
-  # formats into Nix.
   xdg.configFile = {
     "fastfetch".source = ../dotfiles/fastfetch;
     "i3".source = ../dotfiles/i3;
@@ -98,8 +93,6 @@ in
     "wallpapers".source = ../dotfiles/wallpapers;
   };
 
-  # Keep the personal font collection outside the Nix store while exposing it
-  # through Fontconfig's standard per-user directory.
   systemd.user.tmpfiles.rules = [
     "L+ %h/.local/share/fonts - - - - %h/Documents/Media/fonts"
   ];
@@ -115,12 +108,8 @@ in
     x11.enable = true;
   };
 
-  # Without Xft.dpi, Zed derives its scale from the panel's physical size
-  # (~166 DPI here) and renders at ~1.7x. Pin the usual 96 that GTK and Qt
-  # already assume. startx doesn't load ~/.Xresources; i3 merges it.
   xresources.properties."Xft.dpi" = 96;
 
-  # Rofi's show-icons setting needs an icon theme installed.
   gtk = {
     enable = true;
     font = {
@@ -141,7 +130,7 @@ in
       size = 13;
     };
     settings = {
-      # Zellij owns tabs and the status bar in this setup.
+
       tab_bar_style = "hidden";
     };
   };

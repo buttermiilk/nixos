@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Aggressive battery saving: TLP's power-saver profile (no turbo, EPP power,
-# low-power platform profile), optional host CPU power limits, no compositor, and a
-# brightness cap.
-# The marker lives in the runtime dir, so it resets on reboot just like TLP.
-
 action="${1:-toggle}"
 state_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/eco-mode"
 brightness_file="$state_dir/brightness"

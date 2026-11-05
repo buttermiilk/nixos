@@ -12,9 +12,10 @@
     ./modules/obs.nix
     ./modules/rclone.nix
     ./modules/shell.nix
+    ./modules/sober.nix
   ];
 
   home.username = "rin";
   home.homeDirectory = "/home/rin";
-  home.stateVersion = "26.05"; # Never change this after installation.
+  home.stateVersion = "26.05";
 }

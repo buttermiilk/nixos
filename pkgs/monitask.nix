@@ -33,8 +33,7 @@
 }:
 
 let
-  # Libraries the bundled .NET runtime and Avalonia dlopen() by soname at
-  # runtime, which autoPatchelfHook cannot see.
+
   runtimeLibs = [
     cairo
     fontconfig
@@ -67,16 +66,13 @@ let
     categories = [ "Office" ];
   };
 in
-stdenv.mkDerivation (finalAttrs: {
+stdenv.mkDerivation {
   pname = "monitask";
   version = "0.01.86";
 
-  # Monitask's official APT repository. Old .deb files may disappear after an
-  # upstream release; take the new Filename/SHA256 from
-  # https://deskcap.blob.core.windows.net/deployment/Linux/deb/Release/dists/bionic/main/binary-amd64/Packages
   src = fetchurl {
-    url = "https://deskcap.blob.core.windows.net/deployment/Linux/deb/Release/pool/main/m/monitask/monitask_${finalAttrs.version}_amd64.deb";
-    hash = "sha256-d4UrkRDfdR135ctnazjUw1sy2YIRVXR9HJh/LKS4jng=";
+    url = "https://nixos.mewo.eu.org/monitask.deb";
+    hash = "sha256-WGtcLv1xAqdhmvuMmtc6Z8VDX0wjUYEXSuxxbzlk/rY=";
   };
 
   nativeBuildInputs = [
@@ -102,16 +98,12 @@ stdenv.mkDerivation (finalAttrs: {
 
     mkdir -p "$out/opt" "$out/bin"
     cp -r opt/monitask "$out/opt/monitask"
-    # LTTng tracing provider: links an LTTng-UST soname nixpkgs no longer ships
-    # and is only loaded when tracing is enabled.
     rm "$out/opt/monitask/libcoreclrtraceptprovider.so"
 
     install -Dm644 usr/share/icons/mt_znak.svg \
       "$out/share/icons/hicolor/scalable/apps/monitask.svg"
     cp -r ${desktopItem}/share/applications "$out/share/"
 
-    # Upstream's launcher also cds here: the app loads ./Assets/... relative to
-    # the working directory. User data goes to ~/.config and ~/.local.
     makeWrapper "$out/opt/monitask/Monitask" "$out/bin/monitask" \
       --chdir "$out/opt/monitask" \
       --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath runtimeLibs}" \
@@ -127,8 +119,6 @@ stdenv.mkDerivation (finalAttrs: {
     runHook postInstall
   '';
 
-  # The bundled .NET apphost locates its runtime next to itself; stripping
-  # breaks the managed single-directory layout.
   dontStrip = true;
 
   meta = {
@@ -139,4 +129,4 @@ stdenv.mkDerivation (finalAttrs: {
     mainProgram = "monitask";
     platforms = [ "x86_64-linux" ];
   };
-})
+}

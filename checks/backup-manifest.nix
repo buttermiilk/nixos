@@ -1,5 +1,5 @@
-# Sandbox test: create a fixture tree, back it up with restic, and verify that
-# the manifest's paths/excludes produce the expected snapshot contents.
+
+
 {
   pkgs,
   lib,

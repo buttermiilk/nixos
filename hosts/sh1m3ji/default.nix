@@ -1,4 +1,4 @@
-# Dell Latitude 5421 — i7-11850H, Intel UHD, 16 GB RAM, 256 GB NVMe
+
 {
   config,
   lib,
@@ -7,10 +7,7 @@
 }:
 
 let
-  # Sets the hub's 3.5 mm jack (0020:0b21) unauthorized while the Chu2 DSP
-  # (31b2:0113) is present, authorized otherwise. udev runs it on add/remove of
-  # either device. On remove the Chu2's sysfs entry is already gone, so a Chu2
-  # remove event is treated as "absent".
+
   chu2Exclusive = pkgs.writeShellScript "chu2-exclusive" ''
     chu2=0
     jacks=
@@ -42,27 +39,17 @@ in
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.configurationLimit = 5;
 
-  # Keep boot failures recoverable even though the stage-2 root account is
-  # locked. This initrd shell does not bypass LUKS or expose the encrypted disk.
   boot.initrd.systemd.emergencyAccess = true;
 
-  # `/etc/machine-id` lives on the disposable root. Ask systemd to derive the
-  # same ID from the machine's firmware on every boot instead of persisting the
-  # file with a bind mount.
   boot.kernelParams = [ "systemd.machine_id=firmware" ];
 
   networking.hostName = "sh1m3ji";
   networking.networkmanager.enable = true;
 
-  # QCA6174 Wi-Fi/Bluetooth and Intel Smart Sound need redistributable firmware.
   hardware.enableRedistributableFirmware = true;
 
-  # Prefer IPv4 when a destination publishes both address families. Some
-  # networks advertise an IPv6 default route without providing working IPv6;
-  # keeping IPv6 enabled but sorting IPv4 first avoids long connection stalls.
   networking.getaddrinfo.precedence."::ffff:0:0/96" = 100;
 
-  # Required by the binary-only Cloudflare WARP client.
   nixpkgs.config.allowUnfree = true;
 
   time.timeZone = "Asia/Bangkok";
@@ -75,62 +62,29 @@ in
     };
   };
 
-  # X11 + i3 (the i3 config itself is managed by home-manager)
   services.xserver = {
     enable = true;
     windowManager.i3.enable = true;
     displayManager.startx = {
       enable = true;
-      # Provides /etc/X11/xinit/xinitrc, which starts the enabled i3 session.
+
       generateScript = true;
     };
   };
   services.libinput.enable = true;
 
-  # physlock locks every VT (X session included) and blocks VT switching, so
-  # it works from i3 and from a plain tty, without ending the session.
   services.physlock = {
     enable = true;
-    allowAnyUser = true; # setuid wrapper, so the user can run it unprivileged
+    allowAnyUser = true;
     muteKernelMessages = true;
   };
 
-  # PipeWire with PulseAudio compat, so the pactl volume binds in i3 keep working
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     pulse.enable = true;
 
-    # Moondrop Chu2 DSP low-latency profile
-    #
-    # The Chu2 is a full-speed (12 Mbps) async USB device, so it needs
-    # different settings from PipeWire's defaults:
-    #
-    #   audio.format = S16LE
-    #     The default S24_3LE altset played at the wrong pitch and glitched.
-    #     16-bit also uses less of the shared full-speed bandwidth.
-    #   audio.rate = 48000
-    #     Matches the graph rate, so nothing is resampled.
-    #   api.alsa.period-size = 512, api.alsa.period-num = 3
-    #     The driver HALVES the requested period, so this gives a real
-    #     256-frame period and a 768-frame buffer (~16 ms). Measured values:
-    #       default            128 x 256 periods  huge buffer, high latency
-    #       first fix         512 x 3, buffer 1536  ~33 ms delay, uneven offset
-    #       request 256 x 2   128 x 2, buffer 256   ~9 ms, good offset, but the
-    #                          graph quantum dropped to 128 and voice-chat
-    #                          streams (360/1440-frame requests) crackled with
-    #                          "spa.audioconvert: out of buffers"
-    #       request 512 x 3   256 x 3, buffer 768   current: quantum 256 matches
-    #                          osu!'s request, no starvation, offset acceptable
-    #     If the offset needs to go lower, try 256 x 3, but expect the voice
-    #     crackle to return. If crackling returns at this setting, try 1024 x 3.
-    #   api.alsa.headroom = 0
-    #     No extra ALSA-side padding on top of the buffer above.
-    #
-    # Bandwidth: the Chu2 and the hub's 3.5 mm jack are both full-speed audio
-    # behind the hub's single transaction translator, which fits only one. See
-    # the chu2Exclusive udev rule below.
     wireplumber.extraConfig."51-chu2-dsp" = {
       "monitor.alsa.rules" = [
         {
@@ -147,9 +101,6 @@ in
     };
   };
 
-  # ArtCraft's Photoshop and After Effects counterparts (early releases), from
-  # the artcraft flake input. The module also links /usr/share/fonts, the
-  # only place the apps' text tools look for fonts.
   programs.artcraft = {
     enable = true;
     apps = [
@@ -158,7 +109,6 @@ in
     ];
   };
 
-  # Sober is installed from Flathub as a per-user Flatpak after first boot.
   services.flatpak.enable = true;
   xdg.portal = {
     enable = true;
@@ -166,29 +116,33 @@ in
     config.common.default = "gtk";
   };
 
-  # Installs warp-cli and runs the Cloudflare One/WARP daemon. Enrollment is
-  # interactive after first boot; its state has a dedicated Btrfs subvolume.
   services.cloudflare-warp.enable = true;
 
-  # nixos-hardware's common-cpu-intel already enables graphics and adds the
-  # VAAPI/compute runtimes. Tiger Lake UHD uses iHD; the default (null) would also
-  # pull in the legacy i965 driver and Intel's CPU OpenCL runtime.
   hardware.intelgpu.vaapiDriver = "intel-media-driver";
 
-  # Keep HWP frequency scaling during osu!: CPU and iGPU share a power budget.
-  # power-limit.nix caps the Dell at 30 W; thermald can still lower it further.
   programs.gamemode = {
     enable = true;
     settings.general.desiredgov = "powersave";
   };
 
-  # thermald 2.4.9+ includes a Latitude 5421 performance fix; the lock pins
-  # 2.5.11. Keep the default adaptive policy for this Dell's DPTF tables.
   services.thermald.enable = true;
 
-  # nixos-hardware's laptop profile enables TLP. `eco-mode` switches it to
-  # the power-saver profile (`_SAV` values); AC and BAT values must be given
-  # too, or TLP copies the SAV value into them.
+  systemd.services.dell-thermal-profile = {
+    description = "Select Dell quiet thermal profile";
+    wantedBy = [ "multi-user.target" "post-resume.target" ];
+    after = [ "systemd-modules-load.service" "post-resume.target" ];
+    before = [ "power-limit.service" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      ctl=${pkgs.libsmbios}/bin/smbios-thermal-ctl
+      if [ ! -x "$ctl" ]; then
+        ctl=${pkgs.libsmbios}/sbin/smbios-thermal-ctl
+      fi
+      "$ctl" --set-thermal-mode=quiet
+      "$ctl" --get-thermal-info
+    '';
+  };
+
   services.tlp.settings = {
     CPU_BOOST_ON_AC = 1;
     CPU_BOOST_ON_BAT = 1;
@@ -216,38 +170,26 @@ in
     }
   ];
 
-  # Keep memory pressure manageable with the browser, games and IDE open. RAM swap is
-  # used before the disk swapfile, avoiding multi-second stalls on LUKS+Btrfs.
   zramSwap = {
     enable = true;
     memoryPercent = 50;
   };
 
-  services.fstrim.enable = true; # weekly SSD trim through the LUKS mapper
+  services.fstrim.enable = true;
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
   };
   services.blueman.enable = true;
 
-  # NuPhyIO uses Chrome's WebHID API, which needs access to the keyboard's
-  # hidraw interfaces. Restrict that access to the Air75 HE (normal 6120 and
-  # bootloader/upgrader 6f10) plugged into this machine instead of making every
-  # HID device world-writable.
   services.udev.extraRules = ''
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="19f5", ATTRS{idProduct}=="6120|6f10", MODE="0660", GROUP="users", TAG+="uaccess"
 
-    # The Chu2 DSP (31b2:0113) and the 3.5 mm jack on the USB hub (0020:0b21)
-    # are both full-speed audio devices behind the hub's single transaction
-    # translator, which has bandwidth for only one. Deauthorize the jack while
-    # the Chu2 is plugged in and bring it back once the Chu2 is gone.
     ACTION=="add|remove", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ENV{PRODUCT}=="31b2/113/*|20/b21/*", RUN+="${chu2Exclusive}"
   '';
 
   programs.zsh.enable = true;
 
-  # Allow Playwright's upstream Chromium builds to run on NixOS. Browser
-  # revisions are downloaded into ~/.cache/ms-playwright by Playwright itself.
   programs.nix-ld = {
     enable = true;
     libraries = with pkgs; [
@@ -279,9 +221,6 @@ in
     ];
   };
 
-  # Secrets live encrypted in secrets/secrets.yaml (safe to push).
-  # At boot, sops-nix decrypts them into /run/secrets* using the age key,
-  # which lives on the LUKS-protected /persist subvolume and in backups.
   sops = {
     defaultSopsFile = ../../secrets/secrets.yaml;
     age.keyFile = "/persist/var/lib/sops-nix/age/keys.txt";
@@ -306,16 +245,15 @@ in
           mode = "0400";
         })
       // {
-        # Decrypted extra-early, before user creation.
+
         "rin/password".neededForUsers = true;
       };
   };
 
-  # Keep the login password declarative and out of the Nix store.
   users.mutableUsers = false;
   users.users.rin = {
     isNormalUser = true;
-    # Restic preserves numeric ownership when restoring into /mnt from the ISO.
+
     uid = 1000;
     shell = pkgs.zsh;
     extraGroups = [
@@ -328,25 +266,18 @@ in
     hashedPasswordFile = config.sops.secrets."rin/password".path;
   };
 
-  # thunar needs these two services for mounts/trash and thumbnails
   programs.thunar.enable = true;
   services.gvfs.enable = true;
   services.tumbler.enable = true;
   programs.dconf.enable = true;
 
-  # FreeType disables stem darkening by default. Turning it on emboldens thin
-  # stems at small sizes the way macOS (and recent Windows) do, which pairs
-  # with the grayscale, lightly hinted rendering below.
   environment.variables.FREETYPE_PROPERTIES = "cff:no-stem-darkening=0 autofitter:no-stem-darkening=0";
 
-  # System-wide font families and macOS-style rendering. Generic family names
-  # such as "sans-serif" and "monospace" inherit these choices in GTK, X11,
-  # browsers, and other fontconfig-aware applications.
   fonts = {
     packages = with pkgs; [
       adwaita-fonts
-      nerd-fonts.fantasque-sans-mono # monospace
-      googlesans-code # monospace fallback; covers Vietnamese, Fantasque does not
+      nerd-fonts.fantasque-sans-mono
+      googlesans-code
       noto-fonts-cjk-sans
       noto-fonts-color-emoji
       material-icon-font
@@ -355,14 +286,12 @@ in
     fontconfig = {
       enable = true;
       antialias = true;
-      # Slight hinting snaps only vertical metrics, keeping glyph shapes
-      # faithful instead of forcing them onto the pixel grid.
+
       hinting = {
         enable = true;
         style = "slight";
       };
-      # Grayscale antialiasing instead of RGB subpixel: no colour fringes and
-      # a softer, more even look, as on macOS.
+
       subpixel = {
         rgba = "none";
         lcdfilter = "none";
@@ -383,8 +312,7 @@ in
         ];
         emoji = [ "Noto Color Emoji" ];
       };
-      # Apps that request Fantasque by name (Discord, VSCodium) skip the
-      # monospace list above, so chain the fallback onto the family itself.
+
       localConf = ''
         <?xml version="1.0"?>
         <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
@@ -414,6 +342,8 @@ in
   };
 
   environment.systemPackages = with pkgs; [
+    libsmbios
+    lm_sensors
     vim
     git
     wget
@@ -427,7 +357,7 @@ in
     "nix-command"
     "flakes"
   ];
-  # configurationLimit only trims boot entries; this also frees the store.
+
   nix.gc = {
     automatic = true;
     dates = "weekly";
@@ -435,5 +365,5 @@ in
   };
   nix.optimise.automatic = true;
 
-  system.stateVersion = "26.05"; # never change this after install
+  system.stateVersion = "26.05";
 }

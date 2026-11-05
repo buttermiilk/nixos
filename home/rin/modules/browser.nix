@@ -1,9 +1,7 @@
 { lib, ... }:
 
 let
-  # Every page renders in the system monospace font. Pages may not load their
-  # own fonts; Firefox still lets known icon fonts through
-  # (browser.display.use_document_fonts.icon_font_allowlist), so icons survive.
+
   forcedFont = "FantasqueSansM Nerd Font";
   forcedFontSettings = {
     "browser.display.use_document_fonts" = 0;
@@ -163,9 +161,6 @@ in
       "x-scheme-handler/https" = [ "zen-beta.desktop" ];
       "x-scheme-handler/mailto" = [ "thunderbird.desktop" ];
 
-      # osu!lazer's desktop entry also claims these. Keep them on osu!
-      # stable's handlers, which osu-winello's installer writes to
-      # ~/.local/share/applications; swap in "osu!.desktop" for lazer.
       "x-scheme-handler/osu" = [ "osuwinello-url-handler.desktop" ];
       "application/x-osu-beatmap-archive" = [ "osuwinello-file-extensions-handler.desktop" ];
       "application/x-osu-skin-archive" = [ "osuwinello-file-extensions-handler.desktop" ];

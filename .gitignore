@@ -17,3 +17,5 @@ result-*
 # Editor recovery files are local state and may contain sensitive text.
 *.kate-swp
 *.swp
+
+/migration-private/

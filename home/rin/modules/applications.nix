@@ -1,6 +1,5 @@
 {
   config,
-  inputs,
   lib,
   pkgs,
   ...
@@ -64,48 +63,8 @@ let
     categories = [ "Game" ];
   };
 
-  # Rebuilt from Concord's own nix/package.nix with one change: a pinned hash
-  # for its thorvg-sys git dependency. Without it, crane fetches that repo
-  # with builtins.fetchGit at evaluation time -- full history plus the
-  # thorvg and picolibc submodules, about 550 MB -- and root's eval cache
-  # does not share the user's. With the hash, crane uses a shallow fetchgit
-  # that only runs when the store path is missing.
-  concord =
-    let
-      src = inputs.concord;
-      rustPkgs = pkgs.extend (import src.inputs.rust-overlay);
-      # Matches the toolchain pinned in Concord's flake.nix.
-      craneLib =
-        ((src.inputs.crane.mkLib rustPkgs).overrideToolchain rustPkgs.rust-bin.stable."1.90.0".default)
-        .overrideScope
-          (
-            _final: prev: {
-              vendorCargoDeps =
-                args:
-                prev.vendorCargoDeps (
-                  args
-                  // {
-                    outputHashes = {
-                      "git+https://github.com/chojs23/thorvg-rs.git?rev=2548bdbb1487cf473d2c1fe580891b57d973f0dc#2548bdbb1487cf473d2c1fe580891b57d973f0dc" =
-                        "sha256-ECSuq6QQC8myTk2sTyQw0vHWrm7ab4psXVgsx/uAPbA=";
-                    };
-                  }
-                );
-            }
-          );
-      cargoToml = lib.importTOML "${src}/Cargo.toml";
-    in
-    rustPkgs.callPackage "${src}/nix/package.nix" {
-      inherit craneLib;
-      pname = cargoToml.package.name;
-      inherit (cargoToml.package) version description homepage;
-      src = craneLib.cleanCargoSource src;
-    };
+  concord = pkgs.concord;
 
-  # Concord draws images with Kitty's Unicode placeholders, which Zellij 0.45
-  # rejects. A command given to kitty skips the login shell, so Zellij never
-  # starts and Concord talks to Kitty directly. This entry is also what rofi's
-  # drun menu lists.
   concordDesktop = pkgs.makeDesktopItem {
     name = "concord";
     desktopName = "Concord";
@@ -129,18 +88,17 @@ in
   };
 
   home.packages = with pkgs; [
-    # Terminal tools
+
     fastfetch
-    chafa # Fastfetch's image logo renderer
+    chafa
     btop
     zip
     unzip
     ripgrep
     jq
 
-    # Remote access and graphical applications
     remmina
-    # Blender Lab's MCP extension is exposed as a read-only system extension.
+
     blender-with-mcp
     blender-mcp
     ghidra
@@ -149,33 +107,23 @@ in
     taiko-editor
     vinegar
 
-    # Company-mandated time tracker (X11 only; works under i3).
     monitask
 
-    # osu! stable through osu-winello; the wrapper supplies the FHS runtime.
     steam-run
     zenity
     osuWinello
     osuDesktop
     osuTourneyDesktop
 
-    # osu!lazer. The -bin AppImage is ppy's official build; only official
-    # builds may submit scores or join multiplayer, so not the source package.
-    # Updates come from nixpkgs (OSU_EXTERNAL_UPDATE_PROVIDER disables the
-    # in-game updater). Launch it through osuLazer for tosu and gamemode.
     osu-lazer-bin
     osuLazer
 
     concord
     concordDesktop
-    # Concord plays videos and voice-channel streams through mpv on PATH.
-    # Screen sharing needs nothing extra here: Concord captures natively on
-    # X11 and encodes with the host's VA-API driver (intel-media-driver).
+
     mpv
   ];
 
-  # Same ID as the package's own entry, so this one replaces it (in rofi and
-  # as a MIME handler) and launches through the tosu/gamemode wrapper.
   xdg.desktopEntries."osu!" = {
     name = "osu!lazer";
     comment = "Rhythm is just a *click* away";
@@ -198,12 +146,6 @@ in
     };
   };
 
-  # Keep lazer's data (beatmaps, replays, skins, client.realm) in Documents so
-  # the Restic backup covers it. Lazer only rewrites storage.ini when the
-  # folder is changed in-game; do that here instead. On the first launch
-  # against the empty folder it asks once: pick "Start fresh".
-  # Lazer still replaces the link with an identical regular file now and then,
-  # so take it back without leaving an .hm-bak behind.
   xdg.dataFile."osu/storage.ini" = {
     text = ''
       FullPath = ${osuLazerData}
@@ -211,10 +153,6 @@ in
     force = true;
   };
 
-  # Lazer rewrites framework.ini and game.ini in full on exit (game.ini also
-  # holds the login token), so they cannot be store links. Instead, every
-  # activation sets just these keys and keeps the rest. Settings changed in
-  # game while lazer is open come back on its exit; quit it before switching.
   home.activation.osuLazerSettings =
     let
       setKeys =
@@ -230,12 +168,11 @@ in
     lib.hm.dag.entryAfter [ "writeBoundary" ] ''
       run ${
         setKeys "framework.ini" {
-          # VSync only delays what is drawn; with the multithreaded execution
-          # mode, input and hit judgement run on their own threads.
+
           FrameSync = "VSync";
           WindowMode = "Windowed";
           ConfineMouseMode = "Never";
-          # Mixer balance; the master volume is left to the in-game wheel.
+
           VolumeMusic = "0.3";
           VolumeEffect = "0.16";
         }
@@ -255,30 +192,25 @@ in
       }
     '';
 
-  # Bongo Cat only reads config.json and fills omitted keys with its defaults.
-  # Keys are Windows virtual-key codes, even on Linux.
   xdg.configFile."bongocat-osu/config.json".text = builtins.toJSON {
-    mode = 2; # osu!taiko
-    # Chroma-key green so the background can be keyed out.
+    mode = 2;
+
     decoration.rgb = [
       0
       255
       0
     ];
     taiko = {
-      leftCentre = [ 81 ]; # Q
-      rightCentre = [ 87 ]; # W
-      rightRim = [ 221 ]; # ]
-      leftRim = [ 220 ]; # \
+      leftCentre = [ 81 ];
+      rightCentre = [ 87 ];
+      rightRim = [ 221 ];
+      leftRim = [ 220 ];
     };
   };
 
-  # tosu rewrites this file on every start; against the read-only link that
-  # only logs "Configuration migration failed" and the values still apply.
-  # Dashboard setting changes will not persist; change them here.
   xdg.configFile."tosu/tosu.env".text = lib.generators.toKeyValue { } {
     DEBUG_LOG = false;
-    # The binary lives in the Nix store; bump pkgs/tosu.nix instead.
+
     ENABLE_AUTOUPDATE = false;
     OPEN_DASHBOARD_ON_STARTUP = false;
     SHOW_MP_COMMANDS = false;

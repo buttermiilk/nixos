@@ -34,7 +34,6 @@ stop_clicker() {
     return
   fi
 
-  # systemd-inhibit and the input loop share a dedicated process group.
   kill -TERM -- "-$clicker_pid" 2>/dev/null || kill -TERM "$clicker_pid" 2>/dev/null || true
 
   for _ in {1..20}; do
@@ -95,10 +94,8 @@ start_clicker() {
 run_clicker() {
   trap 'exit 0' HUP INT TERM
 
-  # Give the toggle chord time to be fully released before synthesizing input.
   sleep 0.15
   while true; do
-    # click does not reposition the pointer; it uses its current location.
     xdotool click --clearmodifiers 1 || exit 1
     if ((RANDOM % 100 < 5)); then
       xdotool key --clearmodifiers w || exit 1

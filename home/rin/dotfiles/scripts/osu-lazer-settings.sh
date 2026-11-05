@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: osu-lazer-settings FILE KEY=VALUE...
-# Sets each KEY in an osu!lazer ini file (`Key = Value` lines) and leaves
-# every other line alone. Missing keys are appended; a missing file is
-# created with only these keys, and lazer fills in the rest on its next exit.
 file=$1
 shift
 

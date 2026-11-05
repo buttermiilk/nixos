@@ -1,5 +1,5 @@
-# Replace the root Btrfs subvolume before it is mounted. Persistent state is
-# mounted directly from the sibling subvolumes declared in disko.nix.
+
+
 { lib, pkgs, ... }:
 
 let

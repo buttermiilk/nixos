@@ -18,7 +18,7 @@ let
   version = "4.1.4";
 
   archive = fetchurl {
-    url = "https://alchyr.s-ul.eu/QcbjVt0F";
+    url = "https://nixos.mewo.eu.org/taikoeditor.rar";
     hash = "sha256-Qv/cC9vSFF1AqOlKxPz/ioExu1snBFkcAO0sRBeR+F0=";
   };
 

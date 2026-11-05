@@ -1,8 +1,5 @@
-# Declarative partition layout, applied once at install time by disko.
-# Dell WD SN530 256 GB: 1 GiB ESP, then LUKS2/Btrfs using the remaining space.
-# Replaces Windows and its recovery partitions; no dual boot.
-# `/root` is replaced with an empty subvolume during early boot by rollback.nix.
-# State survives only through the direct mounts below; no bind mounts are used.
+
+
 let
   btrfsMountOpts = [
     "compress=zstd"
@@ -13,12 +10,12 @@ in
   disko.devices = {
     disk.main = {
       type = "disk";
-      device = "/dev/nvme0n1"; # WD PC SN530 256 GB — verify with `lsblk` in the live ISO!
+      device = "/dev/nvme0n1";
       content = {
         type = "gpt";
         partitions = {
           esp = {
-            # Room for kernels/initrds across the five retained boot entries.
+
             size = "1G";
             type = "EF00";
             content = {
@@ -33,8 +30,7 @@ in
             content = {
               type = "luks";
               name = "crypted";
-              # Disko prompts twice for the boot passphrase during formatting.
-              # It also prints a separate recovery key that must be stored off-disk.
+
               enrollRecovery = true;
               extraFormatArgs = [
                 "--type"
@@ -87,7 +83,7 @@ in
                   };
                   "/swap" = {
                     mountpoint = "/swap";
-                    # Overflow behind zram; suspend-to-disk is not configured.
+
                     swap.swapfile.size = "8G";
                   };
                 };
