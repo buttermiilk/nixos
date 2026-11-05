@@ -39,19 +39,25 @@ let
     );
   };
 
-  ecoMode = pkgs.writeShellApplication {
-    name = "eco-mode";
-    runtimeInputs = with pkgs; [
-      brightnessctl
-      coreutils
-      i3
-      libnotify
-      procps
-      materialPolybar
-    ];
-    text = lib.removePrefix "#!/usr/bin/env bash
-" (builtins.readFile ../dotfiles/scripts/eco-mode.sh);
-  };
+  mkPowerMode =
+    name: mode:
+    pkgs.writeShellApplication {
+      inherit name;
+      runtimeInputs = with pkgs; [
+        brightnessctl
+        coreutils
+        i3
+        libnotify
+        procps
+        materialPolybar
+        util-linux
+      ];
+      text =
+        "POWER_MODE_TARGET=${mode}\n"
+        + lib.removePrefix "#!/usr/bin/env bash\n" (builtins.readFile ../dotfiles/scripts/eco-mode.sh);
+    };
+  ecoMode = mkPowerMode "eco-mode" "eco";
+  performanceMode = mkPowerMode "performance-mode" "performance";
 in
 {
   home.packages = with pkgs; [
@@ -71,6 +77,7 @@ in
     xclip
     inhibitClicker
     ecoMode
+    performanceMode
     google-chrome
   ];
 

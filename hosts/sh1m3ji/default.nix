@@ -1,4 +1,3 @@
-
 {
   config,
   lib,
@@ -127,23 +126,14 @@ in
 
   services.thermald.enable = true;
 
-  systemd.services.dell-thermal-profile = {
-    description = "Select Dell quiet thermal profile";
-    wantedBy = [ "multi-user.target" "post-resume.target" ];
-    after = [ "systemd-modules-load.service" "post-resume.target" ];
-    before = [ "power-limit.service" ];
-    serviceConfig.Type = "oneshot";
-    script = ''
-      ctl=${pkgs.libsmbios}/bin/smbios-thermal-ctl
-      if [ ! -x "$ctl" ]; then
-        ctl=${pkgs.libsmbios}/sbin/smbios-thermal-ctl
-      fi
-      "$ctl" --set-thermal-mode=quiet
-      "$ctl" --get-thermal-info
-    '';
-  };
-
   services.tlp.settings = {
+    # Start balanced on either power source; keyboard toggles select
+    # TLP's performance/AC and power-saver/SAV settings explicitly.
+    TLP_DEFAULT_MODE = "BAL";
+    TLP_AUTO_SWITCH = 0;
+    PLATFORM_PROFILE_ON_AC = "performance";
+    PLATFORM_PROFILE_ON_BAT = "balanced";
+    PLATFORM_PROFILE_ON_SAV = "quiet";
     CPU_BOOST_ON_AC = 1;
     CPU_BOOST_ON_BAT = 1;
     CPU_BOOST_ON_SAV = 0;

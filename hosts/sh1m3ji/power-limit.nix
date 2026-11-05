@@ -1,56 +1,76 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
 
   powerLimit = pkgs.writeShellApplication {
-    name = "apply-package-power-cap";
-    text = ''
-      ceiling_uw=30000000
-      found=0
-      for zone in /sys/class/powercap/intel-rapl:0 /sys/class/powercap/intel-rapl-mmio:0; do
-        [[ -d "$zone" ]] || continue
-        found=1
-        for constraint in 0 1; do
-          name=$(<"$zone/constraint_''${constraint}_name")
-          case "$constraint:$name" in
-            0:long_term|1:short_term) ;;
-            *) echo "Unexpected RAPL constraint: $zone/$constraint ($name)" >&2; exit 1 ;;
-          esac
-          limit_file="$zone/constraint_''${constraint}_power_limit_uw"
-          current=$(<"$limit_file")
-          if (( current > ceiling_uw )); then
-            printf '%s\n' "$ceiling_uw" >"$limit_file"
-            applied=$(<"$limit_file")
-            if (( applied > ceiling_uw )); then
-              echo "RAPL limit did not take effect: $limit_file=$applied" >&2
-              exit 1
-            fi
-          fi
-        done
-      done
-      if (( ! found )); then
-        echo "No Intel package RAPL interface found" >&2
-        exit 1
-      fi
-    '';
+    name = "power-limit";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.util-linux
+      config.services.tlp.package
+    ];
+    text = lib.removePrefix "#!/usr/bin/env bash\n" (builtins.readFile ./power-limit.sh);
   };
 in
 {
   environment.systemPackages = [ powerLimit ];
+  boot.kernelModules = [ "intel_rapl_msr" ];
+  systemd.tmpfiles.rules = [ "d /run/power-limit 0755 root root -" ];
+
+  security.sudo.extraRules = [
+    {
+      users = [ "rin" ];
+      commands =
+        map
+          (mode: {
+            command = "/run/current-system/sw/bin/power-limit ${mode}";
+            options = [ "NOPASSWD" ];
+          })
+          [
+            "normal"
+            "eco"
+            "performance"
+          ];
+    }
+  ];
+
+  # Record native limits before our cap or thermal policy can change them.
+  systemd.services.power-limit-baseline = {
+    description = "Record firmware CPU package power limits";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-modules-load.service" ];
+    before = [
+      "thermald.service"
+      "tlp.service"
+      "power-limit.service"
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${lib.getExe powerLimit} capture";
+    };
+  };
 
   systemd.services.power-limit = {
-    description = "Cap CPU package sustained and boost power at 30 W";
+    description = "Apply CPU package power cap for the selected mode";
     wantedBy = [
       "multi-user.target"
       "post-resume.target"
     ];
     after = [
+      "power-limit-baseline.service"
       "thermald.service"
+      "tlp.service"
       "post-resume.target"
     ];
     serviceConfig = {
       Type = "oneshot";
-      ExecStart = lib.getExe powerLimit;
+      ExecStart = "${lib.getExe powerLimit} apply";
     };
   };
 

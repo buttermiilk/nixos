@@ -1,71 +1,88 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+requested_mode="${POWER_MODE_TARGET:-eco}"
 action="${1:-toggle}"
-state_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/eco-mode"
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+state_dir="$runtime_dir/eco-mode"
 brightness_file="$state_dir/brightness"
-tlp=/run/current-system/sw/bin/tlp
+mode_file=/run/power-limit/mode
 power_limit=/run/current-system/sw/bin/power-limit
 brightness_cap=40
 
-is_on() { [[ -d "$state_dir" ]]; }
+current_mode=normal
+[[ ! -r "$mode_file" ]] || read -r current_mode <"$mode_file"
 
-bar() { polybar-msg action eco hook "$1" >/dev/null 2>&1 || true; }
+is_on() { [[ "$current_mode" == "$requested_mode" ]]; }
 
-on_ac() {
-  local supply
-  for supply in /sys/class/power_supply/*; do
-    [[ "$(cat "$supply/type" 2>/dev/null)" == Mains ]] || continue
-    [[ "$(cat "$supply/online" 2>/dev/null)" == 1 ]] && return 0
-  done
-  return 1
+# Bar status queries must not wait for an in-progress desktop update.
+if [[ "$action" == status ]]; then
+  if is_on; then echo on; else echo off; fi
+  exit 0
+fi
+
+# Both shortcuts share this lock so a rapid switch cannot mix desktop effects.
+exec 9>"$runtime_dir/power-mode.lock"
+flock 9
+current_mode=normal
+[[ ! -r "$mode_file" ]] || read -r current_mode <"$mode_file"
+
+bar() {
+  local eco_hook=0 performance_hook=0
+  [[ "$current_mode" != eco ]] || eco_hook=1
+  [[ "$current_mode" != performance ]] || performance_hook=1
+  polybar-msg action eco hook "$eco_hook" >/dev/null 2>&1 || true
+  polybar-msg action performance hook "$performance_hook" >/dev/null 2>&1 || true
 }
 
-enable() {
-  mkdir -p "$state_dir"
-  /run/wrappers/bin/sudo "$tlp" power-saver >/dev/null
-  if [[ -x "$power_limit" ]]; then
-    /run/wrappers/bin/sudo "$power_limit" eco
-  fi
-  pkill -x picom || true
-
-  current=$(brightnessctl -m | cut -d, -f4 | tr -d %)
-  echo "$current" >"$brightness_file"
-  if ((current > brightness_cap)); then
-    brightnessctl -q set "${brightness_cap}%"
-  fi
-
-  bar 1
-  notify-send -u low "Eco mode" "On: power-saver, no compositor, brightness ≤ ${brightness_cap}%"
-}
-
-disable() {
-  if on_ac; then
-    /run/wrappers/bin/sudo "$tlp" performance >/dev/null
-  else
-    /run/wrappers/bin/sudo "$tlp" balanced >/dev/null
-  fi
-  if [[ -x "$power_limit" ]]; then
-    /run/wrappers/bin/sudo "$power_limit" normal
-  fi
+restore_desktop() {
+  [[ -d "$state_dir" ]] || return 0
   pgrep -x picom >/dev/null || i3-msg -q "exec --no-startup-id picom --config $HOME/.config/picom/picom.conf"
-
   if [[ -r "$brightness_file" ]]; then
     brightnessctl -q set "$(cat "$brightness_file")%"
   fi
   rm -rf "$state_dir"
+}
 
-  bar 0
-  notify-send -u low "Eco mode" "Off"
+set_mode() {
+  local target=$1 output current
+  if ! output=$(/run/wrappers/bin/sudo -n "$power_limit" "$target" 2>&1); then
+    current_mode=normal
+    [[ ! -r "$mode_file" ]] || read -r current_mode <"$mode_file"
+    if [[ "$current_mode" != eco ]]; then
+      restore_desktop
+    fi
+    bar
+    notify-send -u critical "Power mode" "$output"
+    printf '%s\n' "$output" >&2
+    return 1
+  fi
+  if [[ "$target" == eco ]]; then
+    mkdir -p "$state_dir"
+    current=$(brightnessctl -m | cut -d, -f4 | tr -d %)
+    printf '%s\n' "$current" >"$brightness_file"
+    if (( current > brightness_cap )); then
+      brightnessctl -q set "${brightness_cap}%"
+    fi
+    pkill -x picom || true
+  else
+    restore_desktop
+  fi
+  current_mode=$target
+  bar
+  case "$target" in
+    eco) notify-send -u low "Eco mode" "On: quiet profile, 30 W cap, no compositor, brightness ≤ ${brightness_cap}%" ;;
+    performance) notify-send -u low "Performance mode" "On: performance profile, firmware CPU power limits restored" ;;
+    normal) notify-send -u low "Power mode" "Balanced profile, 30 W cap" ;;
+  esac
 }
 
 case "$action" in
-  on) is_on || enable ;;
-  off) ! is_on || disable ;;
-  toggle) if is_on; then disable; else enable; fi ;;
-  status) if is_on; then echo on; else echo off; fi ;;
+  on) is_on || set_mode "$requested_mode" ;;
+  off) ! is_on || set_mode normal ;;
+  toggle) if is_on; then set_mode normal; else set_mode "$requested_mode"; fi ;;
   *)
-    echo "usage: eco-mode [on|off|toggle|status]" >&2
+    echo "usage: ${requested_mode}-mode [on|off|toggle|status]" >&2
     exit 2
     ;;
 esac

@@ -110,10 +110,15 @@ The launcher also runs the game under `gamemoderun` (performance CPU governor) a
 
 I strongly suggest having your osu! installation on a different disk, and you point the installation to it so it uses your stuff. That also minimizes stateful stuff on your NixOS disk.
 
-#### Eco mode
-`$mod+b` (or `eco-mode toggle`) switches TLP to its power-saver profile (no turbo, EPP `power`, low-power platform profile), stops picom, and caps brightness at 40%.
+#### Power modes
+Balanced is the default on AC and battery, with a 30 W ceiling for sustained and boost CPU package power (including the iGPU). Thermald can reduce it further for cooling.
 
-My lappy has a separate 30 W ceiling configured for sustained and boost CPU package power (including the iGPU). Thermald can reduce it further as needed for cooling.
+- `$mod+b` (or `eco-mode toggle`) selects power-saver with Dell's quiet thermal profile, disables turbo, stops picom, and caps brightness at 40%. The 30 W ceiling stays in place.
+- `$mod+Shift+b` (or `performance-mode toggle`) selects performance and restores the firmware's native sustained and boost power limits. Firmware thermal protection and thermald remain active.
+
+Press the active shortcut again to return to balanced and the 30 W ceiling. Switching directly between eco and performance turns the other mode off; leaving eco restores brightness and picom. Polybar shows `eco` or `perf` while active. Modes reset to balanced on reboot.
+
+After first installing this toggle, reboot once so `power-limit-baseline.service` can capture the original firmware limits before the 30 W cap is applied. Until then performance mode reports that a reboot is needed. The cap timer respects performance mode rather than reapplying 30 W.
 
 ## Secrets (sops-nix)
 Everything in `secrets/secrets.yaml` is age-encrypted so the repo can be public. The machine decrypts at boot with `/persist/var/lib/sops-nix/age/keys.txt`.

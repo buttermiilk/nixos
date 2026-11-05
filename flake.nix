@@ -210,6 +210,22 @@
       checks.${system} = {
         sh1m3ji = sh1m3ji.config.system.build.toplevel;
         backup-manifest = backupManifestCheck;
+        power-modes =
+          pkgs.runCommand "power-modes-check"
+            {
+              nativeBuildInputs = [
+                (pkgs.lib.getBin pkgs.bashNonInteractive)
+                pkgs.coreutils
+                pkgs.python3
+                pkgs.util-linux
+              ];
+            }
+            ''
+              python ${./checks/power-modes.py} \
+                ${./hosts/sh1m3ji/power-limit.sh} \
+                ${./home/rin/dotfiles/scripts/eco-mode.sh}
+              touch "$out"
+            '';
       };
     };
 }

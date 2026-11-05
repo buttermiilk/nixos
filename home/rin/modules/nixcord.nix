@@ -6,9 +6,23 @@
 
 let
 
-  leanDiscord = pkgs.callPackage "${inputs.nixcord}/pkgs/discord" {
-    withTTS = false;
-  };
+  leanDiscord =
+    (pkgs.callPackage "${inputs.nixcord}/pkgs/discord" {
+      withTTS = false;
+    }).overrideAttrs
+      (old: {
+        # Both the host's renderer flags and desktop core request OpenH264
+        # 2.5.1, but the asset updater keeps 2.7.0. Patch both archives;
+        # equal-length replacements preserve ASAR offsets (nixpkgs #581099).
+        postInstall = (old.postInstall or "") + ''
+          for archive in \
+            "$out/opt/Discord/resources/_app.asar" \
+            "$out/opt/Discord/modules/discord_desktop_core/core.asar"; do
+            grep -qF 'libopenh264-2.5.1-linux64.7.so' "$archive"
+            sed -i 's/libopenh264-2\.5\.1-linux64\.7\.so/libopenh264-2.7.0-linux64.8.so/g' "$archive"
+          done
+        '';
+      });
 in
 {
   imports = [ inputs.nixcord.homeModules.nixcord ];
