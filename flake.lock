@@ -3,11 +3,11 @@
     "antigravity": {
       "flake": false,
       "locked": {
-        "lastModified": 1794121803,
-        "narHash": "sha256-m4JvuebOPfY7jvUFofm20ijwR/aK+VwS/k0/DLuqkZU=",
+        "lastModified": 1794467470,
+        "narHash": "sha256-haP5oYppAHd8qYT2uk12mFXCy5OlAZ1j5vMHHujkXtY=",
         "owner": "jacopone",
         "repo": "antigravity-nix",
-        "rev": "52717151d01ac52926edea0a8d7af00e79db3461",
+        "rev": "387ba7cf695cae41854b0e57bb16cf7d4c3efea3",
         "type": "github"
       },
       "original": {
@@ -23,11 +23,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794050298,
-        "narHash": "sha256-OPmhLQ7E9vHekrT7N8DOlU2Qk3rfXvcsIN1Q+/Sedt0=",
+        "lastModified": 1794315320,
+        "narHash": "sha256-tVsLWG2IzSoplKSFQvNGOiK9c+pGTMlG+lb/KRgOMsw=",
         "owner": "ipeglin",
         "repo": "artcraft-nix",
-        "rev": "6a3de1d2305b602e9f46e071997afada5ad0f288",
+        "rev": "c08fa5fc99708aa0185d6c821de0f9705cf0a653",
         "type": "github"
       },
       "original": {
@@ -39,11 +39,11 @@
     "claude-code-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794145993,
-        "narHash": "sha256-VTuZErYZM9Dc5XyXzpejgxsCjYHxEZVTYKRSJYxN9PY=",
+        "lastModified": 1794279708,
+        "narHash": "sha256-K+cKtfjmSKhoSfS5nXRR+i8Ija/0htXiLc3o25JXKTU=",
         "ref": "main",
-        "rev": "dcf5354053c67a0c653796cca9af5630e4a54fc4",
-        "revCount": 483,
+        "rev": "36dfedaa4451a8beb69fe651b1f25920a74c7e5a",
+        "revCount": 485,
         "type": "git",
         "url": "https://github.com/sadjow/claude-code-nix.git"
       },
@@ -56,11 +56,11 @@
     "codex-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1793931226,
-        "narHash": "sha256-V2P3uslOSDm+QeKgfyuqy2Jc0DVpYQs9P7bg7CoeL9U=",
+        "lastModified": 1794438551,
+        "narHash": "sha256-ys4QqflPngMq5fzNw5CVT1x+SKoY7k5Bo48o01P5NS4=",
         "owner": "sadjow",
         "repo": "codex-cli-nix",
-        "rev": "8aba16f50c25eef6f6fa0a1a285ceff309573073",
+        "rev": "894a81eade3797ce641cd295cb7ff471447bbb30",
         "type": "github"
       },
       "original": {
@@ -148,11 +148,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1794141094,
-        "narHash": "sha256-35sQQC4+cscfgFBQZ06ZUg6zcMfJeQPf7t2MuwYxD1Q=",
+        "lastModified": 1794456864,
+        "narHash": "sha256-iS+juE5nq1dPPLyVtNmlkGfAf8TvMamL/LMnqh48jPY=",
         "owner": "4evy",
         "repo": "nixcord",
-        "rev": "0533f06c66ca9a4491292a04fed7f55cc16b1931",
+        "rev": "109af0bd4f8dd690749a1831f94df15a3816ee2a",
         "type": "github"
       },
       "original": {
@@ -276,11 +276,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793999934,
-        "narHash": "sha256-2VbZROa77YEzzuUyRStmHdkrjV89YALYL566Ssij0Fk=",
+        "lastModified": 1794356940,
+        "narHash": "sha256-ML+0SjnxlkLAFclntmMJpUBs13IGQNb5BD14jrmWHsw=",
         "owner": "0xc000022070",
         "repo": "zen-browser-flake",
-        "rev": "37ba4a650eaeeb5a086114da3a2cdf7593967d12",
+        "rev": "a7cac935fd58b6f177d2412ea00c566ed4f0abab",
         "type": "github"
       },
       "original": {

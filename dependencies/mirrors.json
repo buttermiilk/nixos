@@ -13,5 +13,14 @@
     "version": "1",
     "url": "https://nixos.mewo.eu.org/neuro-sama-cursor-r1.tar.xz",
     "hash": "sha256-/rzK5eus3QE8AeV1jXzlMkEjS57K+cjybtKH7zfkQeQ="
+  },
+  "bootvine": {
+    "version": "0.1.3",
+    "rev": "f43ece2f72625efb8ebfe9adede76abc2b0f146f",
+    "buildId": "4dee2d1e1ae7974388c5a006744dc8b83b244e85eebf9ca44a44db8a2584bd80",
+    "url": "https://nixos.mewo.eu.org/bootvine/bootvine-0.1.3-4dee2d1e1ae79743-x86_64-linux.tar.xz",
+    "hash": "sha256-/s2Z8VXBA/jITBs3m+sQxjqFkOtP1uFSm7ikdYwMvJ4=",
+    "sourceUrl": "https://nixos.mewo.eu.org/bootvine/bootvine-0.1.3-4dee2d1e1ae79743-x86_64-linux-source.tar.xz",
+    "sourceHash": "sha256-LqVstTpFJThji+mIv8/+zyZFrLngas+POf4WDQVXUa0="
   }
 }
