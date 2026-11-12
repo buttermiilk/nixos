@@ -15,6 +15,7 @@ stdenvNoCC.mkDerivation {
   pname = "bootvine";
   inherit (source) version;
   src = fetchurl { inherit (source) url hash; };
+  sourceRoot = ".";
   nativeBuildInputs = [ autoPatchelfHook ];
   buildInputs = [
     stdenv.cc.cc.lib
