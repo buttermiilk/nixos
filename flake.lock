@@ -23,11 +23,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794315320,
-        "narHash": "sha256-tVsLWG2IzSoplKSFQvNGOiK9c+pGTMlG+lb/KRgOMsw=",
+        "lastModified": 1794488786,
+        "narHash": "sha256-843vbPbouVOgmYy8CmXM/G67KOu/E6kxfOmQH7IVRMo=",
         "owner": "ipeglin",
         "repo": "artcraft-nix",
-        "rev": "c08fa5fc99708aa0185d6c821de0f9705cf0a653",
+        "rev": "40e60bc8298e5ab29c0dc234085070dfbfabcde7",
         "type": "github"
       },
       "original": {
@@ -39,11 +39,11 @@
     "claude-code-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794279708,
-        "narHash": "sha256-K+cKtfjmSKhoSfS5nXRR+i8Ija/0htXiLc3o25JXKTU=",
+        "lastModified": 1794510627,
+        "narHash": "sha256-NlmkqjiYfGMV3wlUt3NCr46plTer8ISoWGSFL/Urtpo=",
         "ref": "main",
-        "rev": "36dfedaa4451a8beb69fe651b1f25920a74c7e5a",
-        "revCount": 485,
+        "rev": "4ce630c714d4318185d9fd23ea3b12df426e085f",
+        "revCount": 486,
         "type": "git",
         "url": "https://github.com/sadjow/claude-code-nix.git"
       },
@@ -56,11 +56,11 @@
     "codex-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794438551,
-        "narHash": "sha256-ys4QqflPngMq5fzNw5CVT1x+SKoY7k5Bo48o01P5NS4=",
+        "lastModified": 1794512613,
+        "narHash": "sha256-vR0R3gMLoKTFiZyBejpyG5os/U9zBGGVcOOY50lEgDM=",
         "owner": "sadjow",
         "repo": "codex-cli-nix",
-        "rev": "894a81eade3797ce641cd295cb7ff471447bbb30",
+        "rev": "825fff37e8a3a2ab65cc8c36647443ca4c41fa90",
         "type": "github"
       },
       "original": {
@@ -148,11 +148,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1794456864,
-        "narHash": "sha256-iS+juE5nq1dPPLyVtNmlkGfAf8TvMamL/LMnqh48jPY=",
+        "lastModified": 1794488443,
+        "narHash": "sha256-fML/rVvsHYtirHdclrV2Jzw9kZoJogF0zYpiAqdAtYI=",
         "owner": "4evy",
         "repo": "nixcord",
-        "rev": "109af0bd4f8dd690749a1831f94df15a3816ee2a",
+        "rev": "d7037f854e1af43a3c7f42847f9487bfa0218ae9",
         "type": "github"
       },
       "original": {
@@ -276,11 +276,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794356940,
-        "narHash": "sha256-ML+0SjnxlkLAFclntmMJpUBs13IGQNb5BD14jrmWHsw=",
+        "lastModified": 1794495687,
+        "narHash": "sha256-YufvHb7O/52Cp+B9a3HRVO0HluXSEQ75+WMIcU6YPyE=",
         "owner": "0xc000022070",
         "repo": "zen-browser-flake",
-        "rev": "a7cac935fd58b6f177d2412ea00c566ed4f0abab",
+        "rev": "46c4140b55328bc3ee32f22c42185bc534998a1d",
         "type": "github"
       },
       "original": {
