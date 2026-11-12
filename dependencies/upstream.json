@@ -1,0 +1,29 @@
+{
+  "monitask": {
+    "version": "0.01.86",
+    "url": "https://deskcap.blob.core.windows.net/deployment/Linux/deb/Release/pool/main/m/monitask/monitask_0.01.86_amd64.deb",
+    "hash": "sha256-d4UrkRDfdR135ctnazjUw1sy2YIRVXR9HJh/LKS4jng="
+  },
+  "blender-mcp": {
+    "version": "1.0.3",
+    "url": "https://projects.blender.org/lab/blender_mcp.git",
+    "rev": "2cea8d566dde07fbac28a61d698909d69724e853",
+    "hash": "sha256-pYeByO4Oi5eyynsJhGVd1vBWXHvhGn+Y5LGit6Kazlw="
+  },
+  "concord-client": {
+    "version": "2.7.0",
+    "url": "https://github.com/chojs23/concord/releases/download/v2.7.0/concord-x86_64-unknown-linux-gnu.tar.xz",
+    "hash": "sha256-PrQTkXhIY/E5zSj14bzdBGXTsgGgUjPmYAreSlyBxKc="
+  },
+  "tosu": {
+    "version": "4.26.3",
+    "url": "https://github.com/tosuapp/tosu/releases/download/v4.26.3/tosu-linux-v4.26.3.zip",
+    "hash": "sha256-gfN571grBShJe3Fc6Ka/Tg77Vo686EMKeuhCi7ruj4s="
+  },
+  "bootvine": {
+    "version": "0.1.3",
+    "url": "https://codeberg.org/wvhulle/bootvine.git",
+    "rev": "f43ece2f72625efb8ebfe9adede76abc2b0f146f",
+    "hash": "sha256-WzqLbOcOokwn2XT62YdD3llWZbNhMl/STbJb2Yn2/pQ="
+  }
+}

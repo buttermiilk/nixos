@@ -1,0 +1,67 @@
+name: Update dependencies
+
+on:
+  schedule:
+    - cron: '23 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      infrastructure:
+        description: Also update nixpkgs and system module inputs
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update application dependencies (infrastructure weekly)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIRROR_MANIFEST_URL: ${{ vars.MIRROR_MANIFEST_URL }}
+          INCLUDE_INFRASTRUCTURE: ${{ inputs.infrastructure }}
+        run: |
+          args=()
+          if [[ "$INCLUDE_INFRASTRUCTURE" == true || "$(date -u +%u-%H)" == 7-00 ]]; then
+            args+=(--all)
+          fi
+          nix develop .#maintenance -c python dependencies/update.py "${args[@]}"
+      - name: Build and publish Bootvine to R2 when configured
+        env:
+          R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          R2_BUCKET: ${{ vars.R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: nix develop .#maintenance -c python dependencies/publish-bootvine.py
+      - name: Detect updates
+        id: changes
+        run: |
+          if ! git diff --quiet -- flake.lock dependencies; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the host and run checks
+        if: steps.changes.outputs.changed == 'true'
+        run: nix flake check --no-update-lock-file --print-build-logs
+      - name: Commit passing updates
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- flake.lock dependencies
+          git commit -m 'chore: update dependencies'
+          git push origin "HEAD:$DEFAULT_BRANCH"

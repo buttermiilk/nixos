@@ -33,7 +33,7 @@ let
       SH1M3JI_R2_BUCKET = r2Bucket;
       SH1M3JI_RCLONE_CONFIG = rcloneConfig;
     };
-    text = builtins.readFile ../dotfiles/scripts/render-rclone-config.sh;
+    text = builtins.readFile ./rclone/render-rclone-config.sh;
   };
 in
 {

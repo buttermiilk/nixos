@@ -15,6 +15,9 @@ Well then NixOS is the solution. I want to be able to blow this system up to tes
 I have a dots repo back in the time when I was still using Arch so I just decided to mostly reuse that. It's old-school and probably doesn't get in my way. If you like Wayland you probably won't like this.
 
 ## The flake
+
+The root flake assembles the host from `hosts/`, user configuration from `home/`, recovery tools from `tools/`, and development shells from `devshells/`. Scheduled Actions commit dependency updates after the complete host build and checks pass.
+
 I use `home-manager` and something that resembles `impermanence`. I originally wanted to use `impermanence` but its support on 26.05 is rather iffy (as of like, 4 months ago, I don't know how it is now).
 
 The flake evolves over time. At this point I can go from a live ISO to the almost fully preserved system from before the wipe within the hour or so, which probably proves the flake works for me.
@@ -63,7 +66,7 @@ The block above assumes you know for sure what's supposed to happen.
 Commit what the install produced first.
 ```sh
 cd ~/nix-config
-git add flake.lock hosts/sh1m3ji/hardware-configuration.nix .sops.yaml secrets/secrets.yaml
+git add flake.lock hosts/sh1m3ji/hardware-configuration.nix .sops.yaml secrets/*.yaml
 git commit -m "Record installed hardware"
 git push
 ```
@@ -82,6 +85,16 @@ journalctl --user -u restic-backups-gdrive.service
 ```
 
 ## Apps
+
+#### C/C++ development
+
+I use CLion as the full C/C++ IDE, and the normal editor would be Zed. The system provides GCC, CMake, Ninja, GDB, and pkg-config. In CLion's toolchain settings, select these system tools rather than a downloaded toolchain. Project libraries should be supplied by a project-specific Nix shell.
+
+For the configuration's basic C/C++ environment:
+```sh
+nix develop .#cpp -c clion
+```
+
 #### `warp-cli`
 I use `warp-cli` since it's a rather neat tool.
 ```sh
@@ -92,7 +105,7 @@ warp-cli connect
 #### osu!stable
 I play osu! and the `osu-winello` project doesn't support NixOS out of the box, so we have to be a little more creative here.
 
-The flake installs Winello's NixOS-side dependencies and an `osu-winello` launcher that runs the upstream client inside Steam's FHS environment. Winello itself manages a mutable Wine prefix and osu! installation, so install it after the first boot.
+The flake installs Winello's NixOS-side dependencies and an `osu-winello` launcher that runs the upstream client inside Steam's FHS environment. Backups include Winello's launcher, configuration, Wine prefix, YAWL Steam runtime, and file/URL handlers alongside the game in `Documents`. If those paths were restored, no reinstall is needed. For a fresh installation without restored Winello state, install it after the first boot:
 ```sh
 git clone https://github.com/NelloKudo/osu-winello.git ~/osu-winello
 cd ~/osu-winello
@@ -106,28 +119,30 @@ rm -f ~/.local/share/applications/osu-wine.desktop
 update-desktop-database ~/.local/share/applications
 ```
 
-The launcher also runs the game under `gamemoderun` (performance CPU governor) and without fcitx5's XIM, which otherwise delays or drops key presses in Wine.
+The launchers register the game processes with GameMode. The Wine launcher also disables fcitx5's XIM, which otherwise delays or drops key presses in Wine.
+
+GameMode currently requests Intel P-state's `powersave` governor, which allows dynamic CPU frequency scaling.
 
 I strongly suggest having your osu! installation on a different disk, and you point the installation to it so it uses your stuff. That also minimizes stateful stuff on your NixOS disk.
 
 #### Power modes
 Balanced is the default on AC and battery, with a 30 W ceiling for sustained and boost CPU package power (including the iGPU). Thermald can reduce it further for cooling.
 
-- `$mod+b` (or `eco-mode toggle`) selects power-saver with Dell's quiet thermal profile, disables turbo, stops picom, and caps brightness at 40%. The 30 W ceiling stays in place.
+- `$mod+b` (or `eco-mode toggle`) selects power-saver with Dell's quiet thermal profile, disables turbo, and caps brightness at 40%. Picom stays running for VSync, and the 30 W ceiling stays in place.
 - `$mod+Shift+b` (or `performance-mode toggle`) selects performance and restores the firmware's native sustained and boost power limits. Firmware thermal protection and thermald remain active.
 
-Press the active shortcut again to return to balanced and the 30 W ceiling. Switching directly between eco and performance turns the other mode off; leaving eco restores brightness and picom. Polybar shows `eco` or `perf` while active. Modes reset to balanced on reboot.
+Press the active shortcut again to return to balanced and the 30 W ceiling. Switching directly between eco and performance turns the other mode off, leaving eco restores brightness. Polybar shows `eco` or `perf` while active. Modes reset to balanced on reboot.
 
 After first installing this toggle, reboot once so `power-limit-baseline.service` can capture the original firmware limits before the 30 W cap is applied. Until then performance mode reports that a reboot is needed. The cap timer respects performance mode rather than reapplying 30 W.
 
 ## Secrets (sops-nix)
-Everything in `secrets/secrets.yaml` is age-encrypted so the repo can be public. The machine decrypts at boot with `/persist/var/lib/sops-nix/age/keys.txt`.
+Values in `secrets/secrets.yaml` and `secrets/backup.yaml` are age-encrypted so the repo can be public. The machine decrypts at boot with `/persist/var/lib/sops-nix/age/keys.txt`.
 ```sh
 sops secrets/secrets.yaml
 ```
 
 To add a secret, add the value there, declare it in
-`hosts/sh1m3ji/default.nix` under `sops.secrets` then rebuild. Plaintext shows up under `/run/secrets/` with the owner/permissions you declared.
+`hosts/sh1m3ji/secrets.nix` under `sops.secrets` then rebuild. Plaintext shows up under `/run/secrets/` with the owner/permissions you declared.
 
 To rotate the user password, `nix shell nixpkgs#mkpasswd -c mkpasswd -m yescrypt`, replace the hash in `sops secrets/secrets.yaml` then rebuild.
 
@@ -143,15 +158,17 @@ age-keygen -y /tmp/new-age-key.txt
 Replace only `&sh1m3ji` in `.sops.yaml`, then rewrap with the recovery key, verify both, install and rebuild:
 
 ```sh
-SOPS_AGE_KEY_FILE=/path/to/sh1m3ji-age-recovery.txt sops updatekeys secrets/secrets.yaml
-SOPS_AGE_KEY_FILE=/tmp/sh1m3ji-new-age-key.txt sops decrypt secrets/secrets.yaml >/dev/null
-SOPS_AGE_KEY_FILE=/path/to/sh1m3ji-age-recovery.txt sops decrypt secrets/secrets.yaml >/dev/null
+for secrets_file in secrets/*.yaml; do
+  SOPS_AGE_KEY_FILE=/path/to/sh1m3ji-age-recovery.txt sops updatekeys "$secrets_file"
+  SOPS_AGE_KEY_FILE=/tmp/sh1m3ji-new-age-key.txt sops decrypt "$secrets_file" >/dev/null
+  SOPS_AGE_KEY_FILE=/path/to/sh1m3ji-age-recovery.txt sops decrypt "$secrets_file" >/dev/null
+done
 sudo install -Dm600 /tmp/sh1m3ji-new-age-key.txt /persist/var/lib/sops-nix/age/keys.txt
 install -Dm600 /tmp/sh1m3ji-new-age-key.txt "$HOME/.config/sops/age/keys.txt"
 sudo nixos-rebuild switch --flake .#sh1m3ji
 ```
 
-Back the new key up off-device. If a key may have been stolen rather than lost, also run `sops rotate --in-place secrets/secrets.yaml` with the recovery key.
+Back the new key up off-device. If a key may have been stolen rather than lost, also run `sops rotate --in-place` for each file under `secrets/*.yaml` with the recovery key.
 
 ## Day-to-day
 ```sh
@@ -162,10 +179,24 @@ flatpak update --user
 
 **For models:** here is where things should go.
 - Apps, shell, and Home Manager settings: `home/rin/modules/`
-- Services, hardware, users, locale, X: `hosts/sh1m3ji/default.nix`
+- Toolchains and language servers: `home/rin/modules/development.nix`
+- Zed and CLion: `home/rin/modules/editors.nix`
+- Codex configuration and local trust generation: `home/rin/modules/codex.nix`
+- osu!, Tosu, Bongo Cat, and game launchers: `home/rin/modules/gaming.nix`
+- Boot, hardware choices, networking, users, locale and Nix settings: `hosts/sh1m3ji/default.nix`
+- External module wiring and Intel/laptop/SSD selection: `hosts/sh1m3ji/integrations.nix`
+- X/i3 session, input method, portals and desktop services: `hosts/sh1m3ji/desktop.nix`
+- TLP, thermald and GameMode policy: `hosts/sh1m3ji/power.nix`
+- CPU power-limit enforcement and mode switching: `hosts/sh1m3ji/power-limit.nix`
+- Libraries for downloaded Linux binaries: `hosts/sh1m3ji/compatibility.nix`
+- Audio and USB audio switching: `hosts/sh1m3ji/audio.nix`
+- System fonts and font rendering: `hosts/sh1m3ji/fonts.nix`
+- SOPS secret declarations: `hosts/sh1m3ji/secrets.nix`
 - Root replacement and old-root retention: `hosts/sh1m3ji/rollback.nix`
 - Disk layout (reinstall or migration only): `hosts/sh1m3ji/disko.nix`
-- Secrets: `secrets/secrets.yaml`, only through `sops`
+- Secrets and private backup selection: `secrets/*.yaml`, only through `sops`
+
+Scripts live beside the module that owns them, in matching feature directories. `dotfiles/` holds deployed configuration and assets. Recovery utilities live in `tools/` and development environments live in `devshells/`.
 
 ## Boot-time cache cleanup
 Before mounting the fresh root, the rollback service clears all contents of `/var/cache` and `/root/.cache` in the outgoing root, plus these cache locations for each user under `/home`:

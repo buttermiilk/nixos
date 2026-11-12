@@ -6,7 +6,6 @@
 }:
 
 let
-
   powerLimit = pkgs.writeShellApplication {
     name = "power-limit";
     runtimeInputs = [
@@ -21,7 +20,6 @@ in
   environment.systemPackages = [ powerLimit ];
   boot.kernelModules = [ "intel_rapl_msr" ];
   systemd.tmpfiles.rules = [ "d /run/power-limit 0755 root root -" ];
-
   security.sudo.extraRules = [
     {
       users = [ "rin" ];

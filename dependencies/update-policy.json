@@ -1,0 +1,43 @@
+{
+  "applications": [
+    "antigravity",
+    "artcraft",
+    "claude-code-nix",
+    "codex-nix",
+    "nixcord",
+    "zen-browser"
+  ],
+  "infrastructure": [
+    "nixpkgs",
+    "nixos-hardware",
+    "disko",
+    "home-manager",
+    "sops-nix"
+  ],
+  "github": {
+    "concord-client": {
+      "repo": "chojs23/concord",
+      "asset": "concord-x86_64-unknown-linux-gnu.tar.xz"
+    },
+    "tosu": {
+      "repo": "tosuapp/tosu",
+      "asset": "tosu-linux-v{version}.zip"
+    }
+  },
+  "mirrors": [
+    "taiko-editor"
+  ],
+  "manual": {
+    "bongocat-osu": "Fixed binary mirror archive; packaging updates only.",
+    "osu-winello-icon": "Vendored icon.",
+    "neuro-cursor": "Fixed cursor theme mirror archive; update deliberately."
+  },
+  "upstream": [
+    "monitask",
+    "blender-mcp",
+    "bootvine"
+  ],
+  "ci-built-mirrors": [
+    "bootvine"
+  ]
+}

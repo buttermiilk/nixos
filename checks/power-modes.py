@@ -54,6 +54,8 @@ with (root / "calls").open("a") as log:
     log.write(command + " " + " ".join(args) + "\\n")
 if command == "sudo":
     os.execv(args[1], args[1:])
+if command == "pgrep" and (root / "no-compositor").exists():
+    sys.exit(1)
 if command == "tlp":
     if args[0] == "performance" and (root / "fail-performance").exists():
         sys.exit(1)
@@ -152,6 +154,18 @@ if command == "brightnessctl":
         self.run_desktop("eco", "off")
         self.assertEqual((self.root / "brightness").read_text(), "80")
         self.assertEqual((self.root / "profile").read_text(), "balanced")
+        self.assertNotIn("pkill ", (self.root / "calls").read_text())
+
+    def test_power_modes_recover_missing_compositor(self):
+        self.run_power("capture")
+        (self.root / "no-compositor").touch()
+        for mode in ("eco", "performance"):
+            for action in ("on", "off"):
+                (self.root / "calls").write_text("")
+                self.run_desktop(mode, action)
+                calls = (self.root / "calls").read_text()
+                self.assertIn("i3-msg -q exec --no-startup-id picom --config ", calls)
+                self.assertNotIn("pkill ", calls)
 
     def test_failed_performance_keeps_eco_desktop_intact(self):
         self.run_desktop("eco", "on")

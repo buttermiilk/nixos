@@ -1,16 +1,21 @@
 { lib, pkgs, ... }:
 
 let
-
-  materialPolybar = pkgs.polybar.override {
+  themedPolybar = pkgs.polybar.override {
     pulseSupport = true;
     i3Support = true;
   };
 
   startPolybar = pkgs.writeShellApplication {
     name = "start-polybar";
-    runtimeInputs = [ materialPolybar ];
+    runtimeInputs = [
+      themedPolybar
+      pkgs.coreutils
+    ];
     text = ''
+      export POLYBAR_WIFI_LABEL
+      POLYBAR_WIFI_LABEL="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
+      POLYBAR_WIFI_LABEL="''${POLYBAR_WIFI_LABEL:0:7}"
       export POLYBAR_BATTERY=BAT0 POLYBAR_ADAPTER=AC
       for supply in /sys/class/power_supply/*; do
         [[ -r "$supply/type" ]] || continue
@@ -20,7 +25,7 @@ let
           Mains) POLYBAR_ADAPTER="''${supply##*/}" ;;
         esac
       done
-      exec polybar main
+      exec polybar "$@" main
     '';
   };
 
@@ -34,9 +39,7 @@ let
       util-linux
       xdotool
     ];
-    text = lib.removePrefix "#!/usr/bin/env bash\n" (
-      builtins.readFile ../dotfiles/scripts/inhibit-clicker.sh
-    );
+    text = lib.removePrefix "#!/usr/bin/env bash\n" (builtins.readFile ./desktop/inhibit-clicker.sh);
   };
 
   mkPowerMode =
@@ -49,24 +52,23 @@ let
         i3
         libnotify
         procps
-        materialPolybar
+        themedPolybar
         util-linux
       ];
       text =
         "POWER_MODE_TARGET=${mode}\n"
-        + lib.removePrefix "#!/usr/bin/env bash\n" (builtins.readFile ../dotfiles/scripts/eco-mode.sh);
+        + lib.removePrefix "#!/usr/bin/env bash\n" (builtins.readFile ./desktop/eco-mode.sh);
     };
   ecoMode = mkPowerMode "eco-mode" "eco";
   performanceMode = mkPowerMode "performance-mode" "performance";
 in
 {
   home.packages = with pkgs; [
-
     picom
     feh
     autotiling
     rofi
-    materialPolybar
+    themedPolybar
     startPolybar
     flameshot
     libnotify
@@ -86,7 +88,6 @@ in
   services.redshift = {
     enable = true;
     provider = "manual";
-
     latitude = 13.7563;
     longitude = 100.5018;
   };
@@ -137,7 +138,6 @@ in
       size = 13;
     };
     settings = {
-
       tab_bar_style = "hidden";
     };
   };

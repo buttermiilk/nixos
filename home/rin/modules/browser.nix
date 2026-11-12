@@ -1,7 +1,6 @@
 { lib, ... }:
 
 let
-
   forcedFont = "FantasqueSansM Nerd Font";
   forcedFontSettings = {
     "browser.display.use_document_fonts" = 0;

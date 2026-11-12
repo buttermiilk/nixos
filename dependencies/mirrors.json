@@ -1,0 +1,17 @@
+{
+  "taiko-editor": {
+    "version": "4.1.4",
+    "url": "https://nixos.mewo.eu.org/taikoeditor.rar",
+    "hash": "sha256-Qv/cC9vSFF1AqOlKxPz/ioExu1snBFkcAO0sRBeR+F0="
+  },
+  "bongocat-osu": {
+    "version": "unstable-2022-07-30",
+    "url": "https://nixos.mewo.eu.org/bongocat-osu-2022-07-30-r1-x86_64-linux.tar.xz",
+    "hash": "sha256-Chxvzc/qszpiAOPgZNaFzyqjOVuGApKm8LUGM6020rg="
+  },
+  "neuro-cursor": {
+    "version": "1",
+    "url": "https://nixos.mewo.eu.org/neuro-sama-cursor-r1.tar.xz",
+    "hash": "sha256-/rzK5eus3QE8AeV1jXzlMkEjS57K+cjybtKH7zfkQeQ="
+  }
+}

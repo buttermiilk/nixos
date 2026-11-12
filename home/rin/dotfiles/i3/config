@@ -53,7 +53,7 @@ bindsym $mod+Shift+x exec --no-startup-id physlock
 # toggle the sleep-inhibiting click loop after the chord has been released
 bindsym --release $mod+Mod1+x exec --no-startup-id inhibit-clicker toggle
 
-# Aggressive battery saving (TLP power-saver, no picom, brightness cap)
+# Battery saving
 bindsym $mod+b exec --no-startup-id eco-mode toggle
 # Performance mode: restore firmware power limits; press again for balanced.
 bindsym $mod+Shift+b exec --no-startup-id performance-mode toggle

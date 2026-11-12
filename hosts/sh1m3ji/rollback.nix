@@ -1,5 +1,3 @@
-
-
 { lib, pkgs, ... }:
 
 let
@@ -11,7 +9,7 @@ let
       pkgs.findutils
       pkgs.util-linux
     ];
-    text = builtins.readFile ../../home/rin/dotfiles/scripts/rollback-root.sh;
+    text = builtins.readFile ./rollback-root.sh;
   };
 in
 {

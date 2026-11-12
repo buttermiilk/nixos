@@ -19,3 +19,6 @@ result-*
 *.swp
 
 /migration-private/
+
+# Locally built archives to upload to the package mirror.
+/artifacts/

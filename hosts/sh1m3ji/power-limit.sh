@@ -100,8 +100,6 @@ rollback() {
 case "$action" in
   capture)
     [[ ! -f "$state_dir/baseline/ready" ]] || exit 0
-    # The old service has already overwritten this boot's firmware values.
-    # Wait for a fresh boot rather than save the 30 W cap as the baseline.
     if [[ -x /run/booted-system/sw/bin/apply-package-power-cap ]]; then
       echo "Reboot once to capture native firmware power limits."
       exit 0

@@ -4,11 +4,10 @@ let
   installSober = pkgs.writeShellApplication {
     name = "install-sober";
     runtimeInputs = [ pkgs.flatpak ];
-    text = builtins.readFile ../dotfiles/scripts/install-sober.sh;
+    text = builtins.readFile ./sober/install-sober.sh;
   };
 in
 {
-
   systemd.user.services.install-sober = {
     Unit = {
       Description = "Ensure Sober is installed from Flathub for this user";

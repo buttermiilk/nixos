@@ -1,5 +1,3 @@
-
-
 let
   btrfsMountOpts = [
     "compress=zstd"
@@ -15,7 +13,6 @@ in
         type = "gpt";
         partitions = {
           esp = {
-
             size = "1G";
             type = "EF00";
             content = {
@@ -30,7 +27,6 @@ in
             content = {
               type = "luks";
               name = "crypted";
-
               enrollRecovery = true;
               extraFormatArgs = [
                 "--type"
@@ -83,7 +79,6 @@ in
                   };
                   "/swap" = {
                     mountpoint = "/swap";
-
                     swap.swapfile.size = "8G";
                   };
                 };

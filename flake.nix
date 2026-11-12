@@ -11,12 +11,6 @@
 
     antigravity = {
       url = "github:jacopone/antigravity-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.flake-utils.follows = "codex-nix/flake-utils";
-    };
-
-    blender-mcp = {
-      url = "git+https://projects.blender.org/lab/blender_mcp.git?ref=refs/tags/v1.0.0";
       flake = false;
     };
 
@@ -36,7 +30,6 @@
     };
 
     zen-browser = {
-
       url = "github:0xc000022070/zen-browser-flake/beta";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
@@ -44,13 +37,12 @@
 
     codex-nix = {
       url = "github:sadjow/codex-cli-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      flake = false;
     };
 
     claude-code-nix = {
       url = "git+https://github.com/sadjow/claude-code-nix.git?ref=main";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.systems.follows = "codex-nix/flake-utils/systems";
+      flake = false;
     };
 
     nixcord = {
@@ -65,167 +57,52 @@
       url = "github:ipeglin/artcraft-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
   };
 
   outputs =
-    inputs@{
-      nixpkgs,
-      nixos-hardware,
-      disko,
-      home-manager,
-      sops-nix,
-      ...
-    }:
+    inputs@{ nixpkgs, ... }:
     let
       system = "x86_64-linux";
-      backupManifest = import ./backup/manifest.nix;
-
-      overlay = final: _prev: {
-        blender-mcp = final.callPackage ./pkgs/blender-mcp.nix {
-          src = inputs.blender-mcp;
-        };
-        blender-mcp-extension = final.callPackage ./pkgs/blender-mcp-extension.nix {
-          src = inputs.blender-mcp;
-        };
-        blender-with-mcp = final.callPackage ./pkgs/blender-with-mcp.nix {
-          blenderMcpExtension = final.blender-mcp-extension;
-        };
-        concord = final.callPackage ./pkgs/concord.nix { };
-        bongocat-osu = final.callPackage ./pkgs/bongocat-osu.nix { };
-        taiko-editor = final.callPackage ./pkgs/taiko-editor.nix { };
-        material-icon-font = final.callPackage ./pkgs/material-icon-font.nix { };
-        monitask = final.callPackage ./pkgs/monitask.nix { };
-        tosu = final.callPackage ./pkgs/tosu.nix { };
-        neuro-cursor = final.callPackage ./pkgs/neuro-cursor.nix {
-          src = ./home/rin/dotfiles/neuro-cursor/theme;
-        };
-      };
-
-      pkgs = import nixpkgs {
-        inherit system;
-        overlays = [ overlay ];
-        config.allowUnfree = true;
-      };
-
-      authorizeGoogleDrive = pkgs.callPackage ./pkgs/authorize-google-drive.nix { };
-      restoreSh1m3ji = pkgs.callPackage ./pkgs/restore-sh1m3ji.nix {
-        defaultSecretsFile = ./secrets/secrets.yaml;
-        manifest = backupManifest;
-      };
-      backupManifestCheck = import ./checks/backup-manifest.nix {
-        inherit pkgs;
-        lib = nixpkgs.lib;
-        manifest = backupManifest;
-      };
-
+      dependencies = import ./dependencies { inherit inputs; };
       sh1m3ji = nixpkgs.lib.nixosSystem {
         inherit system;
-
-        specialArgs = { inherit inputs; };
+        specialArgs = { inherit dependencies; };
         modules = [
-          nixos-hardware.nixosModules.common-cpu-intel
-          nixos-hardware.nixosModules.common-pc-laptop
-          nixos-hardware.nixosModules.common-pc-laptop-ssd
-
-          disko.nixosModules.disko
-          sops-nix.nixosModules.sops
-          inputs.artcraft.nixosModules.default
-
-          { nixpkgs.overlays = [ overlay ]; }
-
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit inputs; };
-            home-manager.backupFileExtension = "hm-bak";
-            home-manager.users.rin = import ./home/rin;
-          }
-
           ./hosts/sh1m3ji
+          ./hosts/sh1m3ji/integrations.nix
         ];
+      };
+      pkgs = sh1m3ji.pkgs;
+      manifest = import ./backup/manifest.nix;
+      tools = {
+        authorize-google-drive = pkgs.callPackage ./tools/authorize-google-drive.nix { };
+        restore-sh1m3ji = pkgs.callPackage ./tools/restore-sh1m3ji.nix {
+          defaultSecretsFile = ./secrets/secrets.yaml;
+          inherit manifest;
+        };
+      };
+      mkApp = package: {
+        type = "app";
+        program = nixpkgs.lib.getExe package;
+        meta.description = package.meta.description or package.name;
       };
     in
     {
-      formatter.${system} = pkgs.nixfmt-tree;
-
-      overlays.default = overlay;
-
-      packages.${system} = {
-
-        disko = disko.packages.${system}.disko;
-        authorize-google-drive = authorizeGoogleDrive;
-        inherit (pkgs)
-          blender-mcp
-          blender-mcp-extension
-          blender-with-mcp
-          bongocat-osu
-          concord
-          material-icon-font
-          monitask
-          neuro-cursor
-          taiko-editor
-          tosu
-          ;
-        restore-sh1m3ji = restoreSh1m3ji;
-      };
-
-      apps.${system} = {
-        restore-sh1m3ji = {
-          type = "app";
-          program = "${restoreSh1m3ji}/bin/restore-sh1m3ji";
-          meta.description = "Restore the encrypted sh1m3ji snapshot from a live ISO";
-        };
-        authorize-google-drive = {
-          type = "app";
-          program = "${authorizeGoogleDrive}/bin/authorize-google-drive";
-          meta.description = "Authorize rclone and store its Google token through SOPS";
-        };
-      };
-
-      devShells.${system}.rust-gui =
-        let
-          runtimeLibs = with pkgs; [
-            alsa-lib
-            libGL
-            libx11
-            libxcb
-            libxcursor
-            libxi
-            libxkbcommon
-            libxrandr
-            vulkan-loader
-            wayland
-          ];
-        in
-        pkgs.mkShell {
-          packages = [ pkgs.pkg-config ];
-          buildInputs = runtimeLibs;
-
-          LD_LIBRARY_PATH = "/run/opengl-driver/lib:${pkgs.lib.makeLibraryPath runtimeLibs}";
-        };
-
       nixosConfigurations.sh1m3ji = sh1m3ji;
-      checks.${system} = {
-        sh1m3ji = sh1m3ji.config.system.build.toplevel;
-        backup-manifest = backupManifestCheck;
-        power-modes =
-          pkgs.runCommand "power-modes-check"
-            {
-              nativeBuildInputs = [
-                (pkgs.lib.getBin pkgs.bashNonInteractive)
-                pkgs.coreutils
-                pkgs.python3
-                pkgs.util-linux
-              ];
-            }
-            ''
-              python ${./checks/power-modes.py} \
-                ${./hosts/sh1m3ji/power-limit.sh} \
-                ${./home/rin/dotfiles/scripts/eco-mode.sh}
-              touch "$out"
-            '';
+      overlays.default = dependencies.overlay;
+      formatter.${system} = pkgs.nixfmt-tree;
+      packages.${system} =
+        dependencies.packages pkgs
+        // tools
+        // {
+          disko = dependencies.diskoPackage system;
+          concord = pkgs.concord-client;
+        };
+      apps.${system} = builtins.mapAttrs (_: mkApp) tools;
+      devShells.${system} = import ./devshells { inherit pkgs; };
+      checks.${system} = import ./checks {
+        inherit pkgs manifest;
+        host = sh1m3ji;
       };
     };
 }

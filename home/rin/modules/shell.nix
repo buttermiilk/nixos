@@ -7,11 +7,10 @@
 
 let
   githubPatPath = osConfig.sops.secrets."rin/github-pat".path;
-
   githubCredentialHelper = pkgs.writeShellApplication {
     name = "git-credential-github-sops";
     runtimeEnv.GITHUB_PAT_FILE = githubPatPath;
-    text = builtins.readFile ../dotfiles/scripts/git-credential-github-sops.sh;
+    text = builtins.readFile ./shell/git-credential-github-sops.sh;
   };
 in
 {
@@ -64,7 +63,6 @@ in
       '';
     };
     initContent = lib.mkMerge [
-
       (lib.mkOrder 200 ''
         if [[ -z "$ZELLIJ" && -t 0 && -t 1 ]]; then
           zellij attach -c
@@ -90,18 +88,14 @@ in
 
   programs.git = {
     enable = true;
-
     ignores = [
-
       "*~"
       "*.swp"
       "*.swo"
       ".DS_Store"
-
       ".direnv/"
       "result"
       "result-*"
-
       "AGENTS.md"
       ".agents/"
       "CLAUDE.md"

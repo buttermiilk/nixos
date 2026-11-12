@@ -1,12 +1,14 @@
-{ inputs, ... }:
+{ ... }:
 
 {
   imports = [
-    inputs.zen-browser.homeModules.beta
     ./modules/applications.nix
     ./modules/backup.nix
     ./modules/browser.nix
     ./modules/desktop.nix
+    ./modules/codex.nix
+    ./modules/editors.nix
+    ./modules/gaming.nix
     ./modules/development.nix
     ./modules/nixcord.nix
     ./modules/obs.nix

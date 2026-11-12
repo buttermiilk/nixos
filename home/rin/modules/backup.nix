@@ -9,6 +9,8 @@
 let
   manifest = import ../../../backup/manifest.nix;
   resticPassword = osConfig.sops.secrets."rin/restic-password".path;
+  backupPaths = osConfig.sops.secrets."rin/backup-paths".path;
+  backupExcludes = osConfig.sops.secrets."rin/backup-excludes".path;
   rcloneConfig = "${config.xdg.configHome}/rclone/rclone.conf";
 
   zenQuiesce = pkgs.writeShellApplication {
@@ -17,13 +19,13 @@ let
       pkgs.coreutils
       pkgs.procps
     ];
-    text = builtins.readFile ../dotfiles/scripts/quiesce-zen-for-backup.sh;
+    text = builtins.readFile ./backup/quiesce-zen-for-backup.sh;
   };
 
   backupAndReboot = pkgs.writeShellApplication {
     name = "backup-and-reboot";
     runtimeInputs = [ pkgs.systemd ];
-    text = builtins.readFile ../dotfiles/scripts/backup-and-reboot.sh;
+    text = builtins.readFile ./backup/backup-and-reboot.sh;
   };
 in
 {
@@ -32,8 +34,7 @@ in
     backups.gdrive = {
       repository = manifest.repository;
       passwordFile = resticPassword;
-      paths = manifest.paths;
-      exclude = manifest.excludes;
+      dynamicFilesFrom = "${lib.getExe' pkgs.coreutils "cat"} ${lib.escapeShellArg backupPaths}";
       initialize = true;
       timerConfig = null;
       runCheck = false;
@@ -45,9 +46,16 @@ in
         "--host=${manifest.hostname}"
         "--tag=manual"
         "--one-file-system"
+        "--exclude-file=${backupExcludes}"
       ]
       ++ lib.optional manifest.excludeCaches "--exclude-caches";
-      backupPrepareCommand = lib.getExe zenQuiesce;
+      backupPrepareCommand = ''
+        set -eu
+        # Stop before initializing/uploading anything if private policy is missing.
+        test -s ${lib.escapeShellArg backupPaths}
+        test -r ${lib.escapeShellArg backupExcludes}
+        ${lib.getExe zenQuiesce}
+      '';
     };
   };
 
@@ -67,11 +75,15 @@ in
         Requires = [ "rclone-config.service" ];
         After = [ "rclone-config.service" ];
       };
-      Service.Environment = [
-        "RCLONE_CONFIG=${rcloneConfig}"
-        "RCLONE_TPSLIMIT=8"
-        "RCLONE_TPSLIMIT_BURST=8"
-      ];
+      Service = {
+        RuntimeDirectoryMode = "0700";
+        UMask = "0077";
+        Environment = [
+          "RCLONE_CONFIG=${rcloneConfig}"
+          "RCLONE_TPSLIMIT=8"
+          "RCLONE_TPSLIMIT_BURST=8"
+        ];
+      };
     };
   };
 }
