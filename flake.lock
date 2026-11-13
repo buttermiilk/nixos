@@ -3,11 +3,11 @@
     "antigravity": {
       "flake": false,
       "locked": {
-        "lastModified": 1794467470,
-        "narHash": "sha256-haP5oYppAHd8qYT2uk12mFXCy5OlAZ1j5vMHHujkXtY=",
+        "lastModified": 1794553871,
+        "narHash": "sha256-FdK5eev7LZQD0+kbAhlXn8wngp6IOztXtAMdjv8KBBw=",
         "owner": "jacopone",
         "repo": "antigravity-nix",
-        "rev": "387ba7cf695cae41854b0e57bb16cf7d4c3efea3",
+        "rev": "77adc9319f8ab687aa1295e2285dde6bf46f0b07",
         "type": "github"
       },
       "original": {
@@ -39,11 +39,11 @@
     "claude-code-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794524492,
-        "narHash": "sha256-1/riKy6MLNQGmVifeDdqnyrgUJYJot1/cmk1r3pbxso=",
+        "lastModified": 1794603688,
+        "narHash": "sha256-ayfDlD5d9U5b06xxwZndph+/tRgusLaKg4Dcj7bvnEM=",
         "ref": "main",
-        "rev": "376fb1856b0aa2d4f233b303ba84194592bcd304",
-        "revCount": 488,
+        "rev": "2c0782ecf4d07e4395cb56b33555fa4eb30f6784",
+        "revCount": 489,
         "type": "git",
         "url": "https://github.com/sadjow/claude-code-nix.git"
       },
@@ -56,11 +56,11 @@
     "codex-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794520241,
-        "narHash": "sha256-7/Zlz0zDbOYxumc2NKO0hdt6LsMu7r3NAglovH5cpZ8=",
+        "lastModified": 1794561060,
+        "narHash": "sha256-qtrORrnwjvvMRyJI1ZVZjTbTyMzKP1GkA+yJJjJUgH4=",
         "owner": "sadjow",
         "repo": "codex-cli-nix",
-        "rev": "85ab428c0f5fdcc3d561c7553fe89009d7f45738",
+        "rev": "30e33f61d0df01fdd3bcf8063467951b27cc4c34",
         "type": "github"
       },
       "original": {
@@ -148,11 +148,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1794516078,
-        "narHash": "sha256-A1wp/GflJzRQas7nVLbeS/O+GBpv2HU5oXfd1z87GmE=",
+        "lastModified": 1794591582,
+        "narHash": "sha256-gz5oXTAav6xfouhFrnB8aEFAUeF+XyQlJcFfzWlllv8=",
         "owner": "4evy",
         "repo": "nixcord",
-        "rev": "1ec55ed3d53afa9df22948e070b0e0679788d569",
+        "rev": "8ea265ba80c469abc4ffa19e481dd2c4eeeed2a3",
         "type": "github"
       },
       "original": {
