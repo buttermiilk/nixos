@@ -39,11 +39,11 @@
     "claude-code-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794510627,
-        "narHash": "sha256-NlmkqjiYfGMV3wlUt3NCr46plTer8ISoWGSFL/Urtpo=",
+        "lastModified": 1794524492,
+        "narHash": "sha256-1/riKy6MLNQGmVifeDdqnyrgUJYJot1/cmk1r3pbxso=",
         "ref": "main",
-        "rev": "4ce630c714d4318185d9fd23ea3b12df426e085f",
-        "revCount": 486,
+        "rev": "376fb1856b0aa2d4f233b303ba84194592bcd304",
+        "revCount": 488,
         "type": "git",
         "url": "https://github.com/sadjow/claude-code-nix.git"
       },
@@ -56,11 +56,11 @@
     "codex-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794512613,
-        "narHash": "sha256-vR0R3gMLoKTFiZyBejpyG5os/U9zBGGVcOOY50lEgDM=",
+        "lastModified": 1794520241,
+        "narHash": "sha256-7/Zlz0zDbOYxumc2NKO0hdt6LsMu7r3NAglovH5cpZ8=",
         "owner": "sadjow",
         "repo": "codex-cli-nix",
-        "rev": "825fff37e8a3a2ab65cc8c36647443ca4c41fa90",
+        "rev": "85ab428c0f5fdcc3d561c7553fe89009d7f45738",
         "type": "github"
       },
       "original": {
@@ -148,11 +148,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1794488443,
-        "narHash": "sha256-fML/rVvsHYtirHdclrV2Jzw9kZoJogF0zYpiAqdAtYI=",
+        "lastModified": 1794516078,
+        "narHash": "sha256-A1wp/GflJzRQas7nVLbeS/O+GBpv2HU5oXfd1z87GmE=",
         "owner": "4evy",
         "repo": "nixcord",
-        "rev": "d7037f854e1af43a3c7f42847f9487bfa0218ae9",
+        "rev": "1ec55ed3d53afa9df22948e070b0e0679788d569",
         "type": "github"
       },
       "original": {
