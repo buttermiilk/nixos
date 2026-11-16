@@ -11,9 +11,9 @@
     "hash": "sha256-pYeByO4Oi5eyynsJhGVd1vBWXHvhGn+Y5LGit6Kazlw="
   },
   "concord-client": {
-    "version": "2.7.0",
-    "url": "https://github.com/chojs23/concord/releases/download/v2.7.0/concord-x86_64-unknown-linux-gnu.tar.xz",
-    "hash": "sha256-PrQTkXhIY/E5zSj14bzdBGXTsgGgUjPmYAreSlyBxKc="
+    "version": "2.7.1",
+    "url": "https://github.com/chojs23/concord/releases/download/v2.7.1/concord-x86_64-unknown-linux-gnu.tar.xz",
+    "hash": "sha256-ig8OhilYw/QBoqqIr9U7PUuBWz7CrtMPgyoxmaPWxuI="
   },
   "tosu": {
     "version": "4.26.3",
