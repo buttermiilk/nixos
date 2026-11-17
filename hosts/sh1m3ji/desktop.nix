@@ -13,6 +13,10 @@
     displayManager.startx = {
       enable = true;
       generateScript = true;
+      extraCommands = ''
+        # Complete the keyring startup begun by PAM at the console login.
+        /run/wrappers/bin/gnome-keyring-daemon --start --components=secrets
+      '';
     };
     inputClassSections = [
       ''
@@ -42,10 +46,14 @@
   };
 
   services.flatpak.enable = true;
+  services.gnome.gnome-keyring.enable = true;
   xdg.portal = {
     enable = true;
     extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    config.common.default = "gtk";
+    config.common = {
+      default = "gtk";
+      "org.freedesktop.impl.portal.Secret" = "gnome-keyring";
+    };
   };
 
   services.blueman.enable = true;
