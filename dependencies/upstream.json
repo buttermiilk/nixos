@@ -25,5 +25,10 @@
     "url": "https://codeberg.org/wvhulle/bootvine.git",
     "rev": "bc0674ef7820d680a62bac04259bd140de3c3f27",
     "hash": "sha256-47+MgKwFUErTiop+xab4F4AY0HqOZHCZy/OSoUo5Eqs="
+  },
+  "larpercord": {
+    "version": "0.6.6",
+    "url": "https://github.com/RshaCuDeVidro/larperCord/releases/download/v0.6.6/larpercord-linux-x86_64",
+    "hash": "sha256-79kEBxS76AUUTePk3v4Hlg2JXZzLhSC5tTN888hfgl4="
   }
 }

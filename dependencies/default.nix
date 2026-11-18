@@ -29,6 +29,7 @@
         blenderMcpExtension = final.blender-mcp-extension;
       };
       concord-client = final.callPackage ./packages/concord.nix { };
+      larpercord = final.callPackage ./packages/larpercord.nix { };
       bootvine = final.callPackage ./packages/bootvine.nix { };
       bongocat-osu = final.callPackage ./packages/bongocat-osu.nix { };
       taiko-editor = final.callPackage ./packages/taiko-editor.nix { };
@@ -53,6 +54,7 @@
         blender-mcp-extension
         blender-with-mcp
         concord-client
+        larpercord
         bongocat-osu
         taiko-editor
         monitask

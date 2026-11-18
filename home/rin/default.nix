@@ -3,6 +3,7 @@
 {
   imports = [
     ./modules/applications.nix
+    ./modules/awscli.nix
     ./modules/backup.nix
     ./modules/browser.nix
     ./modules/desktop.nix

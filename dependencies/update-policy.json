@@ -19,6 +19,10 @@
       "repo": "chojs23/concord",
       "asset": "concord-x86_64-unknown-linux-gnu.tar.xz"
     },
+    "larpercord": {
+      "repo": "RshaCuDeVidro/larperCord",
+      "asset": "larpercord-linux-x86_64"
+    },
     "tosu": {
       "repo": "tosuapp/tosu",
       "asset": "tosu-linux-v{version}.zip"

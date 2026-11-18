@@ -38,6 +38,7 @@ in
     ghidra
     monitask
     concordDesktop
+    larpercord
     mpv
   ];
 }

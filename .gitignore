@@ -5,6 +5,7 @@ old-dots/
 .agents/
 .claude/
 .codex/
+AGENTS.md
 
 # Local design and implementation notes
 docs/*
