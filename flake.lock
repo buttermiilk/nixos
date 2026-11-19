@@ -3,11 +3,11 @@
     "antigravity": {
       "flake": false,
       "locked": {
-        "lastModified": 1794985857,
-        "narHash": "sha256-ws4Cc8g9xXstZUj/CWhxTq+ZEzBw2RsSEBnnfcHKXJ8=",
+        "lastModified": 1795072244,
+        "narHash": "sha256-Rfz1x37KgExSSxsu+2Y5vZLWfGdDOZEC+RS8aGkvgS8=",
         "owner": "jacopone",
         "repo": "antigravity-nix",
-        "rev": "427867a472711ed6ae6b05d168abe067c6a3bda8",
+        "rev": "60fbcaeaad4b20d62856a1445e83a9bef66dbc83",
         "type": "github"
       },
       "original": {
@@ -39,11 +39,11 @@
     "claude-code-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1794960137,
-        "narHash": "sha256-+pARhHaJijnv8acZJR93NoQjgud6NsoYa0zEpmgA5nc=",
+        "lastModified": 1795053722,
+        "narHash": "sha256-bR1Yoc7ctQjwbpRK+RvirjVfqbogO5OfTSY0K8FXxZQ=",
         "ref": "main",
-        "rev": "409e35c59fab5c280bebb72a997ff505b419bba3",
-        "revCount": 491,
+        "rev": "c341fce10730e3d3620e9aca0079526e00021cd7",
+        "revCount": 492,
         "type": "git",
         "url": "https://github.com/sadjow/claude-code-nix.git"
       },
