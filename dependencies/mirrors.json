@@ -15,12 +15,12 @@
     "hash": "sha256-/rzK5eus3QE8AeV1jXzlMkEjS57K+cjybtKH7zfkQeQ="
   },
   "bootvine": {
-    "version": "0.1.4",
-    "rev": "bc0674ef7820d680a62bac04259bd140de3c3f27",
-    "buildId": "f50e6cd02a4f1660970a72e48579addf082d8270899bcd9253d2d125bcdc0d3c",
-    "url": "https://nixos.mewo.eu.org/bootvine/bootvine-0.1.4-f50e6cd02a4f1660-x86_64-linux.tar.xz",
-    "hash": "sha256-369CzPJVzqAELoUIPGickdT7lDwh+01sNiyT6zNyDLY=",
-    "sourceUrl": "https://nixos.mewo.eu.org/bootvine/bootvine-0.1.4-f50e6cd02a4f1660-x86_64-linux-source.tar.xz",
-    "sourceHash": "sha256-/iPYQQs01OkDjFFkzwYr5MFdusr8r7+Juec+43G9L7U="
+    "version": "0.1.5",
+    "rev": "0e7acf85f85084b30c681658a4b8fc1c3a90b0a3",
+    "buildId": "cb1de3334199a468657dda91c036476a7be6caa52d87522c068e082a6cc75f50",
+    "url": "https://nixos.mewo.eu.org/bootvine/bootvine-0.1.5-cb1de3334199a468-x86_64-linux.tar.xz",
+    "hash": "sha256-nz6D9FipyID8H4kzHYIlv8OzV2LHRm+TwN94dCHglpg=",
+    "sourceUrl": "https://nixos.mewo.eu.org/bootvine/bootvine-0.1.5-cb1de3334199a468-x86_64-linux-source.tar.xz",
+    "sourceHash": "sha256-SNCRU/jSpLMXnTZhFLy3cD1mOF3dpc/fF2cnb9ggwqU="
   }
 }

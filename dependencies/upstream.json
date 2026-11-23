@@ -21,10 +21,10 @@
     "hash": "sha256-gfN571grBShJe3Fc6Ka/Tg77Vo686EMKeuhCi7ruj4s="
   },
   "bootvine": {
-    "version": "0.1.4",
+    "version": "0.1.5",
     "url": "https://codeberg.org/wvhulle/bootvine.git",
-    "rev": "bc0674ef7820d680a62bac04259bd140de3c3f27",
-    "hash": "sha256-47+MgKwFUErTiop+xab4F4AY0HqOZHCZy/OSoUo5Eqs="
+    "rev": "0e7acf85f85084b30c681658a4b8fc1c3a90b0a3",
+    "hash": "sha256-YZhRJqsSuwA/Xh5RSELzVh1j7q9d+gwCc4iQs6cd4J0="
   },
   "larpercord": {
     "version": "0.6.7",
