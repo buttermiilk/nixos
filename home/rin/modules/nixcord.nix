@@ -16,6 +16,9 @@ in
       openASAR.enable = false;
 
       commandLineArgs = [
+        # Intel VA-API decoding reports "Failed to synchronize VA surface before
+        # output"; use software video decoding until the driver/runtime is fixed.
+        "--disable-accelerated-video-decode"
         "--disable-background-networking"
         "--disable-breakpad"
         "--disable-component-update"

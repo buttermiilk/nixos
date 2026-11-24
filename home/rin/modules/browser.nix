@@ -1,29 +1,6 @@
-{ lib, ... }:
+{ ... }:
 
 let
-  forcedFont = "FantasqueSansM Nerd Font";
-  forcedFontSettings = {
-    "browser.display.use_document_fonts" = 0;
-  }
-  // lib.listToAttrs (
-    lib.concatMap
-      (
-        lang:
-        map (generic: lib.nameValuePair "font.name.${generic}.${lang}" forcedFont) [
-          "serif"
-          "sans-serif"
-          "monospace"
-        ]
-      )
-      [
-        "x-western"
-        "x-unicode"
-        "x-cyrillic"
-        "el"
-        "ja"
-      ]
-  );
-
   zenExtensionSettings =
     builtins.mapAttrs
       (_: addonSlug: {
@@ -53,7 +30,8 @@ in
     };
 
     profiles.default = {
-      settings = forcedFontSettings;
+      # Restore website fonts even in profiles that previously disabled them.
+      settings."browser.display.use_document_fonts" = 1;
 
       pins = {
         "YouTube" = {

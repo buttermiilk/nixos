@@ -40,5 +40,14 @@ in
     concordDesktop
     larpercord
     mpv
+    pulsar-mouse-linux
   ];
+
+  xdg.mimeApps.defaultApplications = {
+    "image/bmp" = [ "feh.desktop" ];
+    "image/jpeg" = [ "feh.desktop" ];
+    "image/png" = [ "feh.desktop" ];
+    "image/tiff" = [ "feh.desktop" ];
+    "image/webp" = [ "feh.desktop" ];
+  };
 }

@@ -45,6 +45,11 @@
       flake = false;
     };
 
+    pulsar-mouse-linux = {
+      url = "github:packerlschupfer/pulsar-mouse-linux";
+      flake = false;
+    };
+
     nixcord = {
       url = "github:4evy/nixcord";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -31,6 +31,14 @@
   };
   services.libinput.enable = true;
 
+  # Pulsar X2 Super Clear, wired and Areson receiver. Tag interface 1 before
+  # systemd's seat rules so the configurator can use hidraw as the desktop user.
+  services.udev.packages = [
+    (pkgs.writeTextDir "lib/udev/rules.d/70-pulsar-x2.rules" ''
+      SUBSYSTEM=="hidraw", ENV{ID_VENDOR_ID}=="25a7", ENV{ID_MODEL_ID}=="fa7b|fa7c", ENV{ID_USB_INTERFACE_NUM}=="01", TAG+="uaccess"
+    '')
+  ];
+
   services.physlock = {
     enable = true;
     allowAnyUser = true;

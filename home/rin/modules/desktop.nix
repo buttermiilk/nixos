@@ -93,6 +93,34 @@ in
   };
 
   xdg.configFile = {
+    # Installing the addon alone does not add UniKey to a fresh Fcitx profile.
+    "fcitx5/profile" = {
+      force = true;
+      text = ''
+        [Groups/0]
+        Name=Default
+        Default Layout=us
+        DefaultIM=unikey
+
+        [Groups/0/Items/0]
+        Name=keyboard-us
+        Layout=
+
+        [Groups/0/Items/1]
+        Name=unikey
+        Layout=
+
+        [GroupOrder]
+        0=Default
+      '';
+    };
+    "fcitx5/conf/unikey.conf" = {
+      force = true;
+      text = ''
+        InputMethod=Telex
+        OutputCharset=Unicode
+      '';
+    };
     "fastfetch".source = ../dotfiles/fastfetch;
     "i3".source = ../dotfiles/i3;
     "picom".source = ../dotfiles/picom;
@@ -120,6 +148,11 @@ in
 
   gtk = {
     enable = true;
+    colorScheme = "dark";
+    theme = {
+      name = "Adwaita-dark";
+      package = pkgs.gnome-themes-extra;
+    };
     font = {
       name = "Adwaita Sans";
       size = 11;
@@ -128,6 +161,12 @@ in
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
+  };
+
+  qt = {
+    enable = true;
+    platformTheme.name = "gtk3";
+    style.name = "adwaita-dark";
   };
 
   programs.kitty = {

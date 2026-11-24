@@ -210,6 +210,22 @@
         "url": "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst"
       }
     },
+    "pulsar-mouse-linux": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794421982,
+        "narHash": "sha256-f6ZooWvkzUiVpbnWmwBwcLacOXgINqg03goDcF6WOFc=",
+        "owner": "packerlschupfer",
+        "repo": "pulsar-mouse-linux",
+        "rev": "037cefe2d503428766b9d0938672b0210b63b2a4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "packerlschupfer",
+        "repo": "pulsar-mouse-linux",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "antigravity": "antigravity",
@@ -221,6 +237,7 @@
         "nixcord": "nixcord",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs",
+        "pulsar-mouse-linux": "pulsar-mouse-linux",
         "sops-nix": "sops-nix",
         "zen-browser": "zen-browser"
       }

@@ -16,6 +16,9 @@
       claude-code-cli = final.callPackage "${inputs.claude-code-nix}/package.nix" { };
       google-antigravity-cli = final.callPackage "${inputs.antigravity}/pkgs/cli.nix" { };
       discord-lean = final.callPackage "${inputs.nixcord}/pkgs/discord" { withTTS = false; };
+      pulsar-mouse-linux = final.callPackage "${inputs.pulsar-mouse-linux}/package.nix" {
+        src = inputs.pulsar-mouse-linux;
+      };
 
       blender-mcp = final.callPackage ./packages/blender-mcp.nix {
         src = blenderMcpSource;
@@ -50,6 +53,7 @@
         claude-code-cli
         google-antigravity-cli
         discord-lean
+        pulsar-mouse-linux
         blender-mcp
         blender-mcp-extension
         blender-with-mcp
