@@ -23,11 +23,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1795446482,
-        "narHash": "sha256-cTAxBYFxlW3ia/eZTwGBh0CorNUbfFGS3PfrrCESxmE=",
+        "lastModified": 1795533070,
+        "narHash": "sha256-jAiZK1p7SPOwGukb9wDarPiADhSAB9aAhb9SxOMzWVg=",
         "owner": "ipeglin",
         "repo": "artcraft-nix",
-        "rev": "fe1637f641b2b9b664d43afe85b391cbf6b886e4",
+        "rev": "adaff4e5a3bce94a2b3481bc9aeb30f1053a6d61",
         "type": "github"
       },
       "original": {
@@ -148,11 +148,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1795497561,
-        "narHash": "sha256-a9C8FwAhs3iywcUemPHji1LbFIVqN/g+urTSiTOSYQ8=",
+        "lastModified": 1795567006,
+        "narHash": "sha256-W3lZzNSmFuJ06xNJAJpQXjmud6zKRGWBOG6SQPz5SJk=",
         "owner": "4evy",
         "repo": "nixcord",
-        "rev": "30826fa4157dc9d2753fc1b0e2d0cc83c4efa0ce",
+        "rev": "84512b855f5100096c3dd5a2370f666c5d1fb367",
         "type": "github"
       },
       "original": {
@@ -213,11 +213,11 @@
     "pulsar-mouse-linux": {
       "flake": false,
       "locked": {
-        "lastModified": 1794421982,
-        "narHash": "sha256-f6ZooWvkzUiVpbnWmwBwcLacOXgINqg03goDcF6WOFc=",
+        "lastModified": 1795350592,
+        "narHash": "sha256-qtEpEZnJf4ijJgAV6tyV2TtR2pu2LkoeHhPZtroWplc=",
         "owner": "packerlschupfer",
         "repo": "pulsar-mouse-linux",
-        "rev": "037cefe2d503428766b9d0938672b0210b63b2a4",
+        "rev": "cf2c377c167968c561b27c95f981692837033e8a",
         "type": "github"
       },
       "original": {
