@@ -27,8 +27,8 @@
     "hash": "sha256-YZhRJqsSuwA/Xh5RSELzVh1j7q9d+gwCc4iQs6cd4J0="
   },
   "larpercord": {
-    "version": "0.6.7",
-    "url": "https://github.com/RshaCuDeVidro/larperCord/releases/download/v0.6.7/larpercord-linux-x86_64",
-    "hash": "sha256-sfVwyhRqe6WALf1zX8u9CutBY+dWQRCK2GnjSH94E1k="
+    "version": "0.6.8",
+    "url": "https://github.com/RshaCuDeVidro/larperCord/releases/download/v0.6.8/larpercord-linux-x86_64",
+    "hash": "sha256-6CGrNVBrDk+WkAAR10SMwtNP7gKMyBg75Rb1aVZePXM="
   }
 }
