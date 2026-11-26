@@ -1,4 +1,9 @@
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   themedPolybar = pkgs.polybar.override {
@@ -160,6 +165,18 @@ in
     iconTheme = {
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
+    };
+  };
+
+  # broadcast GTK settings to running X11 apps
+  services.xsettingsd = {
+    enable = true;
+    settings = {
+      "Net/ThemeName" = config.gtk.theme.name;
+      "Net/IconThemeName" = config.gtk.iconTheme.name;
+      "Gtk/FontName" = "${config.gtk.font.name} ${toString config.gtk.font.size}";
+      "Gtk/CursorThemeName" = config.home.pointerCursor.name;
+      "Gtk/CursorThemeSize" = config.home.pointerCursor.size;
     };
   };
 
