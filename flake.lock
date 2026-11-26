@@ -3,11 +3,11 @@
     "antigravity": {
       "flake": false,
       "locked": {
-        "lastModified": 1795590815,
-        "narHash": "sha256-Ht1kIYqrhLW4+Ke6i7O3BIhoSqnkTeiRR4ezgD/m2O0=",
+        "lastModified": 1795677075,
+        "narHash": "sha256-wxmI7pyE/XuYlWwHic0bHsR2L3gI8zyQjkxQGQ1u0jw=",
         "owner": "jacopone",
         "repo": "antigravity-nix",
-        "rev": "b589f42919ba2059baa4141f7103dd8cb18fcb90",
+        "rev": "c7b60189f6c5d728d8da3e2bb71a3684f1598a95",
         "type": "github"
       },
       "original": {
@@ -148,11 +148,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1795640718,
-        "narHash": "sha256-XOoVe7jgVnpILXgA2PO9KddPKxfQKC1eht9nrZ0ZRBg=",
+        "lastModified": 1795696915,
+        "narHash": "sha256-+N+KfA7/65XtTTdpIHlhmBOUkpahZ8W8NJfK3V1vqeg=",
         "owner": "4evy",
         "repo": "nixcord",
-        "rev": "597928c4b4f959c9d4e79620795fbd521597d164",
+        "rev": "2c5937299328e6a63e32340c473c79178c5531fb",
         "type": "github"
       },
       "original": {
